@@ -11,58 +11,38 @@ namespace GW2_Live
 {
     class MapView : PictureBox
     {
-        private class Keypoint
-        {
-            public float X;
-            public float Y;
-
-            public Keypoint(float x, float y)
-            {
-                X = x;
-                Y = y;
-            }
-        }
-
-        private class Tri
-        {
-            public HashSet<Keypoint> points;
-
-            public Tri(HashSet<Keypoint> points)
-            {
-                this.points = new HashSet<Keypoint>(points);
-            }
-        }
-
-        private const float KeypointRadius = 4;
+        private const float KeypointRadius = 6;
         private readonly Brush TriBrush = new SolidBrush(Color.FromArgb(150, 255, 100, 100));
 
         public bool IsEditing { get; set; } = false;
 
+        public Plan Plan { get; set; }
+
         private int offsetX;
         private int offsetY;
-        private double centerX = -1;
-        private double centerY = -1;
-        private double vx = 0;
-        private double vy = 0;
+        private float playerX = -1;
+        private float playerY = -1;
+        private float vx = 0;
+        private float vy = 0;
         private float scale = 1;
         private float trueScale;
 
-        private List<Keypoint> keypoints = new List<Keypoint>();
-        private List<Tri> tris = new List<Tri>();
-        private HashSet<Keypoint> selectedKeypoints = new HashSet<Keypoint>();
+        private HashSet<Plan.Point> selectedKeypoints = new HashSet<Plan.Point>();
+        private Plan.Point pointToRemove;
+        private Plan.Tri triToRemove;
 
         public void Reset()
         {
-            centerX = -1;
-            centerY = -1;
+            playerX = -1;
+            playerY = -1;
             scale = 1;
             this.Invalidate();
         }
 
-        public void SetPlayerPosition(double x, double y, double vx, double vy)
+        public void SetPlayerPosition(float x, float y, float vx, float vy)
         {
-            centerX = x;
-            centerY = y;
+            playerX = x;
+            playerY = y;
             this.vx = vx;
             this.vy = vy;
         }
@@ -72,54 +52,105 @@ namespace GW2_Live
             this.scale = scale;
         }
 
-        public void AddKeypoint(float x, float y)
+        public void Select(int x, int y)
         {
-            keypoints.Add(new Keypoint(x, y));
+            // Check if we have a Point or Tri to deselect.
+            if (pointToRemove == null && triToRemove == null)
+            {
+                var p = GetPointAtPixel(x, y);
+
+                if (p == null)
+                {
+                    selectedKeypoints.Clear();
+                }
+                else
+                {
+                    selectedKeypoints.Add(p);
+
+                    if (selectedKeypoints.Count == 3)
+                    {
+                        Plan.AddTri(selectedKeypoints);
+                    }
+                }
+            }
+            else
+            {
+                pointToRemove = null;
+                triToRemove = null;
+            }
+
             this.Invalidate();
         }
 
-        public void Select(int x, int y)
+        public void SpecialSelect(int x, int y)
         {
-            bool foundPoint = false;
 
-            float r = KeypointRadius + 2;
-            r = r * r;
+        }
 
-            foreach (Keypoint p in keypoints)
+        public void Remove(int x, int y)
+        {
+            var p = GetPointAtPixel(x, y);
+
+            if (p != null)
             {
+                if (p == pointToRemove)
+                {
+                    // TODO: remove p
+                }
+                else
+                {
+                    pointToRemove = p;
+                }
+            }
+            else
+            {
+                var t = GetTriAtPixel(x, y);
+
+                if (t != null)
+                {
+                    if (t == triToRemove)
+                    {
+                        // TODO: remove t
+                    }
+                    else
+                    {
+                        triToRemove = t;
+                    }
+                }
+            }
+        }
+
+        private Plan.Point GetPointAtPixel(int x, int y)
+        {
+            float rSquared = KeypointRadius * KeypointRadius;
+
+            foreach (var p in Plan.Points)
+            {
+                // Convert each Point from Percent scale to Pixel scale,
+                // where the points on the display are actually circles.
                 float xx = (p.X * this.Image.Width + offsetX) * trueScale;
                 float yy = (p.Y * this.Image.Height + offsetY) * trueScale;
 
                 float dx = x - xx;
                 float dy = y - yy;
 
-                if (dx * dx + dy * dy <= r)
+                if (dx * dx + dy * dy <= rSquared)
                 {
-                    selectedKeypoints.Add(p);
-                    foundPoint = true;
-                    break;
+                    return p;
                 }
             }
 
-            if (foundPoint)
-            {
-                if (selectedKeypoints.Count == 3)
-                {
-                    tris.Add(new Tri(selectedKeypoints));
-                    selectedKeypoints.Clear();
-                }
-            }
-            else
-            {
-                selectedKeypoints.Clear();
-            }
-
-            this.Invalidate();
+            return null;
         }
 
-        public void Remove(int x, int y)
+        private Plan.Tri GetTriAtPixel(int x, int y)
         {
+            // Convert the point from Pixel scale to Percent scale,
+            // which the Plan uses to store and compare all values.
+            float xx = ((x / trueScale) - offsetX) / this.Image.Width;
+            float yy = ((y / trueScale) - offsetY) / this.Image.Height;
 
+            return Plan.GetTriContainingPoint(new Plan.Point(xx, yy));
         }
 
         protected override void OnPaint(PaintEventArgs pe)
@@ -129,9 +160,9 @@ namespace GW2_Live
                 trueScale = scale * Math.Min((float)this.Width / this.Image.Width, (float)this.Height / this.Image.Height);
 
                 pe.Graphics.ScaleTransform(trueScale, trueScale);
-                
-                double cx = centerX < 0 ? 0.5 : centerX;
-                double cy = centerY < 0 ? 0.5 : centerY;
+
+                float cx = playerX < 0 ? 0.5f : playerX;
+                float cy = playerY < 0 ? 0.5f : playerY;
                 offsetX = (int)(this.Width / (2 * trueScale) - this.Image.Width * cx);
                 offsetY = (int)(this.Width / (2 * trueScale) - this.Image.Height * cy);
 
@@ -152,12 +183,12 @@ namespace GW2_Live
 
         private void DrawTris(Graphics g)
         {
-            foreach (Tri t in tris)
+            foreach (var t in Plan.Tris)
             {
                 int i = 0;
                 PointF[] points = new PointF[3];
 
-                foreach (Keypoint p in t.points)
+                foreach (var p in t.Points)
                 {
                     float x = this.Image.Width * p.X;
                     float y = this.Image.Height * p.Y;
@@ -171,8 +202,8 @@ namespace GW2_Live
 
         private void DrawPlayer(Graphics g)
         {
-            double x = this.Image.Width * centerX;
-            double y = this.Image.Height * centerY;
+            double x = this.Image.Width * playerX;
+            double y = this.Image.Height * playerY;
 
             double h = Math.Sqrt(vx * vx + vy * vy);
             double c = vx / h;
@@ -228,24 +259,24 @@ namespace GW2_Live
 
         private void DrawKeypoints(Graphics g)
         {
-            foreach (Keypoint p in keypoints)
+            foreach (var p in Plan.Points)
             {
                 float x = this.Image.Width * p.X;
                 float y = this.Image.Height * p.Y;
 
                 g.FillEllipse(
                     Brushes.Black,
-                    x - (KeypointRadius + 2),
-                    y - (KeypointRadius + 2),
-                    2 * (KeypointRadius + 2),
-                    2 * (KeypointRadius + 2));
+                    x - (KeypointRadius),
+                    y - (KeypointRadius),
+                    2 * (KeypointRadius),
+                    2 * (KeypointRadius));
 
                 g.FillEllipse(
                     selectedKeypoints.Contains(p) ? Brushes.LightGreen : Brushes.Red,
-                    x - KeypointRadius,
-                    y - KeypointRadius,
-                    2 * KeypointRadius,
-                    2 * KeypointRadius);
+                    x - (KeypointRadius - 2),
+                    y - (KeypointRadius - 2),
+                    2 * (KeypointRadius - 2),
+                    2 * (KeypointRadius - 2));
             }
         }
     }
