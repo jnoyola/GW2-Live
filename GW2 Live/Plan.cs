@@ -93,7 +93,6 @@ namespace GW2_Live
         public HashSet<Point> Points { get; }
         public HashSet<Tri> Tris { get; }
         public List<Point> Route { get; }
-        public Point VendorPoint { get; private set; }
 
         public Plan(int mapId)
         {
@@ -117,38 +116,6 @@ namespace GW2_Live
             Point p = new Point(x, y);
             p.Tris.Add(GetTriContainingPoint(p));
             Route.Add(p);
-        }
-
-        public void SetVendorPoint(Point p)
-        {
-            VendorPoint = p;
-        }
-
-        public void RemovePoint(Point p)
-        {
-            // First remove all tris containing this point.
-            foreach (Tri tri in p.Tris)
-            {
-                RemoveTri(tri);
-            }
-
-            Points.Remove(p);
-        }
-
-        public void RemoveTri(Tri t)
-        {
-            // First remove all references to this tri from its points.
-            foreach (Point p in t.Points)
-            {
-                p.Tris.Remove(t);
-            }
-
-            Tris.Remove(t);
-        }
-
-        public void RemoveAllRoutePoints()
-        {
-            Route.Clear();
         }
 
         public Tri GetTriContainingPoint(Point p)

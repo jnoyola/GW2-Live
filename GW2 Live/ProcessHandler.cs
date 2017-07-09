@@ -17,7 +17,7 @@ namespace GW2_Live
         public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
 
         private const int ScreenshotTimeoutSeconds = 2;
-        private const int ScreenshotNumRetries = 10;
+        private const int ScreenshotNumRetries = 3;
 
         public IntPtr hwnd => gameProcess.MainWindowHandle;
 
@@ -44,7 +44,7 @@ namespace GW2_Live
             Rect rect;
             GetWindowRect(hwnd, out rect);
             gameRectangle = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
-            
+
             //Config.Register("Capture", "Capture.dll");
             AttachProcess();
 
@@ -96,6 +96,7 @@ namespace GW2_Live
 
         private void AttachProcess()
         {
+            // Skip if the process is already hooked (and we want to hook multiple applications)
             if (HookManager.IsHooked(gameProcess.Id))
             {
                 return;
@@ -107,6 +108,7 @@ namespace GW2_Live
             };
 
             var captureInterface = new CaptureInterface();
+            var s = typeof(CaptureInterface).Assembly.Location;
             captureProcess = new CaptureProcess(gameProcess, captureConfig, captureInterface);
 
             Thread.Sleep(10);
