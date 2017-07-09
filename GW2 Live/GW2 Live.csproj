@@ -10,15 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EasyHook" Version="2.7.6270.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\..\packages\Dynamics.PowerApps.Platform.ETWManifest\*\content\*">
-      <Link>PackageRoot\MAData\CdsManifests\$([System.String]::new('%(Filename)').Replace('Microsoft.Dynamics.',''))%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="EasyHook">
+      <HintPath>..\EasyHook\EasyHook.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 

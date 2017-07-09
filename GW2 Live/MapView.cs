@@ -84,18 +84,29 @@ namespace GW2_Live
 
         public void SpecialSelect(int x, int y)
         {
+            selectedKeypoints.Clear();
 
+            // TODO: this needs to be for a route point
+            var p = GetPointAtPixel(x, y);
+
+            if (p != null)
+            {
+                Plan.SetVendorPoint(p);
+            }
         }
 
         public void Remove(int x, int y)
         {
+            selectedKeypoints.Clear();
+
             var p = GetPointAtPixel(x, y);
 
             if (p != null)
             {
                 if (p == pointToRemove)
                 {
-                    // TODO: remove p
+                    Plan.RemovePoint(p);
+                    pointToRemove = null;
                 }
                 else
                 {
@@ -110,7 +121,8 @@ namespace GW2_Live
                 {
                     if (t == triToRemove)
                     {
-                        // TODO: remove t
+                        Plan.RemoveTri(t);
+                        triToRemove = null;
                     }
                     else
                     {
@@ -196,7 +208,9 @@ namespace GW2_Live
                     ++i;
                 }
 
-                g.FillPolygon(TriBrush, points);
+                g.FillPolygon(
+                    t == triToRemove ? Brushes.Black : TriBrush,
+                    points);
             }
         }
 
@@ -271,8 +285,23 @@ namespace GW2_Live
                     2 * (KeypointRadius),
                     2 * (KeypointRadius));
 
+                Brush brush;
+
+                if (p == pointToRemove)
+                {
+                    brush = Brushes.Black;
+                }
+                else if (selectedKeypoints.Contains(p))
+                {
+                    brush = Brushes.LightGreen;
+                }
+                else
+                {
+                    brush = Brushes.Red;
+                }
+
                 g.FillEllipse(
-                    selectedKeypoints.Contains(p) ? Brushes.LightGreen : Brushes.Red,
+                    brush,
                     x - (KeypointRadius - 2),
                     y - (KeypointRadius - 2),
                     2 * (KeypointRadius - 2),
