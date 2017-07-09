@@ -25,7 +25,7 @@ namespace GW2_Live
 
         const int TileZoom = 7;
         const int TileWidth = 256;
-        const double MetersPerInch = 0.0254;
+        const float MetersPerInch = 0.0254f;
         const int MapEditZoom = 4;
 
         const int WM_HOTKEY_MSG_ID = 0x0312;
@@ -163,6 +163,8 @@ namespace GW2_Live
                     mapRect = new Rectangle(mapRectX0, mapRectY0, mapRectX1 - mapRectX0, mapRectY1 - mapRectY0);
                 }
             }
+            
+            mapView.Plan = await Plan.LoadOrCreate(identity.map_id);
 
             startLabel.SetPropertyThreadSafe("Text", $"{identity.name} active in {mapName}");
         }
@@ -306,13 +308,13 @@ namespace GW2_Live
 
         private void UpdateMap()
         {
-            GetPlayerPosition(out double x, out double y);
+            GetPlayerPosition(out float x, out float y);
             mapView.SetPlayerPosition(x, y, mumble.GetVx(), mumble.GetVy());
             mapView.SetScale(MapEditZoom);
             mapView.Invalidate();
         }
 
-        private void GetPlayerPosition(out double x, out double y)
+        private void GetPlayerPosition(out float x, out float y)
         {
             x = (mumble.GetX() / MetersPerInch - mapRect.X) / mapRect.Width;
             y = 1 - (mumble.GetY() / MetersPerInch - mapRect.Y) / mapRect.Height;
@@ -327,8 +329,9 @@ namespace GW2_Live
         {
             if (mapView.IsEditing)
             {
-                GetPlayerPosition(out double x, out double y);
-                mapView.AddKeypoint((float)x, (float)y);
+                GetPlayerPosition(out float x, out float y);
+                mapView.Plan.AddPoint(x, y);
+                mapView.Invalidate();
             }
         }
 
@@ -347,7 +350,14 @@ namespace GW2_Live
 
                 if (me.Button == MouseButtons.Left)
                 {
-                    mapView.Select(me.X, me.Y);
+                    if (me.Clicks == 1)
+                    {
+                        mapView.Select(me.X, me.Y);
+                    }
+                    else
+                    {
+                        mapView.SpecialSelect(me.X, me.Y);
+                    }
                 }
                 else
                 {
