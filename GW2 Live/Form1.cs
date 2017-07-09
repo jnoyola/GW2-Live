@@ -76,7 +76,7 @@ namespace GW2_Live
         {
             base.OnClosing(e);
 
-            mumble.Dispose();
+            mumble?.Dispose();
         }
 
         private void SetupProcess()
@@ -90,6 +90,7 @@ namespace GW2_Live
                 try
                 {
                     proc = new ProcessHandler(processName);
+                    break;
                 }
                 catch (Exception e)
                 {
@@ -99,8 +100,20 @@ namespace GW2_Live
 
             if (proc == null)
             {
+                startLabel.SetPropertyThreadSafe("Text", "No GW2 processes could be found or injected . . .");
                 throw new AggregateException("The game process could not be found", processExceptions);
             }
+
+
+            Task.Run(async () =>
+            {
+                for (int i = 0; i < 10; ++i)
+                {
+                    await Task.Delay(2000);
+                    var b = await proc.TakeScreenshot();
+                    b.Save($"c:\\users\\Jonathan\\Desktop\\shots\\test{i}.png", System.Drawing.Imaging.ImageFormat.Png);
+                }
+            }).GetAwaiter().GetResult();
         }
 
         private async Task SetupMumble()
