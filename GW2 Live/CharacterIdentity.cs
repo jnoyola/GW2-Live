@@ -8,9 +8,6 @@ namespace GW2_Live
 {
     struct CharacterIdentity
     {
-        #pragma warning disable 0649
-        // These fields are assigned by Json deserialization.
-
         public string name;
         public int profession;
         public int race;
@@ -19,7 +16,5 @@ namespace GW2_Live
         public int team_color_id;
         public bool commander;
         public double fov;
-
-        #pragma warning restore 0649
     }
 }

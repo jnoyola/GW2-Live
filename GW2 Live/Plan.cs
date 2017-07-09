@@ -79,15 +79,60 @@ namespace GW2_Live
             }
         }
 
-        public struct JsonPlan
+        public class JsonPlan
         {
-            public List<float[]> Points { get; set; }
-            public List<int[]> Tris { get; set; }
-            public List<float[]> Route { get; set; }
+            public List<float[]> Points { get; }
+            public List<int[]> Tris { get; }
+            public List<float[]> Route { get; }
+
+            private Dictionary<Point, int> pointIndices;
+
+            public JsonPlan(Plan plan)
+            {
+                Points = new List<float[]>();
+                Tris = new List<int[]>();
+                Route = new List<float[]>();
+
+                pointIndices = new Dictionary<Point, int>();
+
+                foreach (Point p in plan.Points)
+                {
+                    Points.Add(new float[2] { p.X, p.Y });
+                    pointIndices[p] = Points.Count - 1;
+                }
+
+                foreach (Tri t in plan.Tris)
+                {
+                    Tris.Add(t.Points.Select(p => pointIndices[p]).ToArray());
+                }
+
+                foreach (Point p in plan.Route)
+                {
+                    Route.Add(new float[2] { p.X, p.Y });
+                }
+            }
+
+            public class NoFormatArrayConverter : JsonConverter
+            {
+                public override bool CanConvert(Type objectType)
+                {
+                    return objectType.IsArray;
+                }
+
+                public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+                {
+                    throw new NotImplementedException();
+                }
+
+                public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+                {
+                    writer.WriteRawValue(JsonConvert.SerializeObject(value, Formatting.None));
+                }
+            }
         }
 
-        private static readonly string Folder = "plans";
-        private static readonly string FileFormat = "{0}.json";
+        private static readonly string FolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GW2 Live", "plans");
+        private static readonly string FilePathFormat = Path.Combine(FolderPath, "{0}.json");
 
         public int MapId { get; }
         public HashSet<Point> Points { get; }
@@ -99,23 +144,6 @@ namespace GW2_Live
             MapId = mapId;
             Points = new HashSet<Point>();
             Tris = new HashSet<Tri>();
-        }
-
-        public void AddPoint(float x, float y)
-        {
-            Points.Add(new Point(x, y));
-        }
-
-        public void AddTri(HashSet<Point> points)
-        {
-            Tris.Add(new Tri(points));
-        }
-
-        public void AddRoutePoint(float x, float y)
-        {
-            Point p = new Point(x, y);
-            p.Tris.Add(GetTriContainingPoint(p));
-            Route.Add(p);
         }
 
         public Tri GetTriContainingPoint(Point p)
@@ -136,66 +164,16 @@ namespace GW2_Live
             return null;
         }
 
-        public List<Tri> SearchForPathBetweenTris(Tri from, Tri to)
-        {
-            var alreadySeen = new HashSet<Tri>();
-            var queue = new Queue<List<Tri>>();
-
-            var list = new List<Tri>();
-            list.Add(from);
-            queue.Enqueue(list);
-
-            while (queue.Count > 0)
-            {
-                var curList = queue.Dequeue();
-                var endTri = curList.Last();
-
-                if (endTri == to)
-                {
-                    return curList;
-                }
-
-                foreach (var nextTri in endTri.GetAdjacentTris())
-                {
-                    if (!alreadySeen.Contains(nextTri))
-                    {
-                        var nextList = new List<Tri>(curList);
-                        nextList.Add(nextTri);
-                        queue.Enqueue(nextList);
-                    }
-                }
-            }
-
-            return null;
-        }
-
         public void SaveToFile()
         {
-            var jsonPoints = new List<float[]>();
-            var jsonTris = new List<int[]>();
-            var jsonRoute = new List<float[]>();
-
-            var pointIndices = new Dictionary<Point, int>();
-
-            foreach (Point p in Points)
+            Directory.CreateDirectory(FolderPath);
+            using (var writer = File.CreateText(String.Format(FilePathFormat, MapId)))
             {
-                jsonPoints.Add(new float[2] { p.X, p.Y });
-                pointIndices[p] = Points.Count - 1;
+                var serializer = new JsonSerializer();
+                serializer.Formatting = Formatting.Indented;
+                serializer.Converters.Add(new JsonPlan.NoFormatArrayConverter());
+                serializer.Serialize(writer, new JsonPlan(this));
             }
-
-            foreach (Tri t in Tris)
-            {
-                jsonTris.Add(t.Points.Select(p => pointIndices[p]).ToArray());
-            }
-
-            foreach (Point p in Route)
-            {
-                jsonRoute.Add(new float[2] { p.X, p.Y });
-            }
-
-            var jsonPlan = new JsonPlan { Points = jsonPoints, Tris = jsonTris, Route = jsonRoute };
-
-            FileManager.SaveToFile(jsonPlan, Folder, String.Format(FileFormat, MapId));
         }
 
         public static async Task<Plan> LoadFromFile(int mapId)
@@ -203,45 +181,39 @@ namespace GW2_Live
             Plan plan = new Plan(mapId);
             List<Point> pointList = new List<Point>();
 
-            var jsonGraph = await FileManager.ReadFromFile<JsonPlan>(Folder, String.Format(FileFormat, mapId));
-
-            foreach (var pointArray in jsonGraph.Points)
+            using (var reader = new StreamReader(String.Format(FilePathFormat, mapId)))
             {
-                Point p = new Point(pointArray[0], pointArray[1]);
-                plan.Points.Add(p);
-                pointList.Add(p);
-            }
+                string json = await reader.ReadToEndAsync();
+                var jsonGraph = JsonConvert.DeserializeObject<JsonPlan>(json);
 
-            foreach (var triArray in jsonGraph.Tris)
-            {
-                HashSet<Point> triPoints = new HashSet<Point>();
-
-                foreach (int pointIndex in triArray)
+                foreach (var pointArray in jsonGraph.Points)
                 {
-                    triPoints.Add(pointList[pointIndex]);
+                    Point p = new Point(pointArray[0], pointArray[1]);
+                    plan.Points.Add(p);
+                    pointList.Add(p);
                 }
 
-                plan.AddTri(triPoints);
-            }
+                foreach (var triArray in jsonGraph.Tris)
+                {
+                    HashSet<Point> triPoints = new HashSet<Point>();
 
-            foreach (var pointArray in jsonGraph.Route)
-            {
-                plan.AddRoutePoint(pointArray[0], pointArray[1]);
+                    foreach (int pointIndex in triArray)
+                    {
+                        triPoints.Add(pointList[pointIndex]);
+                    }
+
+                    Tri t = new Tri(triPoints);
+                    plan.Tris.Add(t);
+                }
+
+                foreach (var pointArray in jsonGraph.Route)
+                {
+                    Point p = new Point(pointArray[0], pointArray[1]);
+                    plan.Route.Add(p);
+                }
             }
 
             return plan;
-        }
-
-        public static async Task<Plan> LoadOrCreate(int mapId)
-        {
-            try
-            {
-                return await LoadFromFile(mapId);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException || ex is DirectoryNotFoundException)
-            {
-                return new Plan(mapId);
-            }
         }
     }
 }
