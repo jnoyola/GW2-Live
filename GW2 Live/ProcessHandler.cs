@@ -4,7 +4,6 @@ using System.Threading;
 using Capture.Interface;
 using Capture.Hook;
 using Capture;
-using EasyHook;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
@@ -41,11 +40,14 @@ namespace GW2_Live
 
             gameProcess = processes[0];
 
-            Rect rect;
-            GetWindowRect(hwnd, out rect);
-            gameRectangle = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+            Rect rect = new Rect { X = -1 };
+            while (rect.X < 0 || rect.Y < 0)
+            {
+                GetWindowRect(hwnd, out rect);
+                gameRectangle = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                Thread.Sleep(100);
+            }
             
-            //Config.Register("Capture", "Capture.dll");
             AttachProcess();
 
             captureProcess.CaptureInterface.DisplayInGameText("Testing...");
