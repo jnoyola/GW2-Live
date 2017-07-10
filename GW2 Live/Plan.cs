@@ -84,6 +84,7 @@ namespace GW2_Live
             public List<float[]> Points { get; set; }
             public List<int[]> Tris { get; set; }
             public List<float[]> Route { get; set; }
+            public int VendorPoint { get; set; }
         }
 
         private static readonly string Folder = "plans";
@@ -127,7 +128,7 @@ namespace GW2_Live
         public void RemovePoint(Point p)
         {
             // First remove all tris containing this point.
-            foreach (Tri tri in p.Tris)
+            foreach (Tri tri in p.Tris.ToList())
             {
                 RemoveTri(tri);
             }
@@ -207,13 +208,14 @@ namespace GW2_Live
             var jsonPoints = new List<float[]>();
             var jsonTris = new List<int[]>();
             var jsonRoute = new List<float[]>();
+            int jsonVendorPoint = -1;
 
             var pointIndices = new Dictionary<Point, int>();
 
             foreach (Point p in Points)
             {
                 jsonPoints.Add(new float[2] { p.X, p.Y });
-                pointIndices[p] = Points.Count - 1;
+                pointIndices[p] = jsonPoints.Count - 1;
             }
 
             foreach (Tri t in Tris)
@@ -224,9 +226,14 @@ namespace GW2_Live
             foreach (Point p in Route)
             {
                 jsonRoute.Add(new float[2] { p.X, p.Y });
+
+                if (p == VendorPoint)
+                {
+                    jsonVendorPoint = jsonRoute.Count - 1;
+                }
             }
 
-            var jsonPlan = new JsonPlan { Points = jsonPoints, Tris = jsonTris, Route = jsonRoute };
+            var jsonPlan = new JsonPlan { Points = jsonPoints, Tris = jsonTris, Route = jsonRoute, VendorPoint = jsonVendorPoint };
 
             FileManager.SaveToFile(jsonPlan, Folder, String.Format(FileFormat, MapId));
         }

@@ -39,6 +39,7 @@ namespace GW2_Live
             }
 
             gameProcess = processes[0];
+            AttachProcess();
 
             Rect rect = new Rect { X = -1 };
             while (rect.X < 0 || rect.Y < 0)
@@ -47,10 +48,6 @@ namespace GW2_Live
                 gameRectangle = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
                 Thread.Sleep(100);
             }
-            
-            AttachProcess();
-
-            captureProcess.CaptureInterface.DisplayInGameText("Testing...");
         }
 
         public Task<Bitmap> TakeScreenshot()

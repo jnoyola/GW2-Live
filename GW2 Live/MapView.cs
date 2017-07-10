@@ -11,7 +11,7 @@ namespace GW2_Live
 {
     class MapView : PictureBox
     {
-        private const float KeypointRadius = 6;
+        private const float KeypointRadius = 8;
         private readonly Brush TriBrush = new SolidBrush(Color.FromArgb(150, 255, 100, 100));
 
         public bool IsEditing { get; set; } = false;
@@ -52,6 +52,13 @@ namespace GW2_Live
             this.scale = scale;
         }
 
+        public void ClearSelection()
+        {
+            selectedKeypoints.Clear();
+            pointToRemove = null;
+            triToRemove = null;
+        }
+
         public void Select(int x, int y)
         {
             // Check if we have a Point or Tri to deselect.
@@ -61,7 +68,7 @@ namespace GW2_Live
 
                 if (p == null)
                 {
-                    selectedKeypoints.Clear();
+                    ClearSelection();
                 }
                 else
                 {
@@ -70,13 +77,13 @@ namespace GW2_Live
                     if (selectedKeypoints.Count == 3)
                     {
                         Plan.AddTri(selectedKeypoints);
+                        ClearSelection();
                     }
                 }
             }
             else
             {
-                pointToRemove = null;
-                triToRemove = null;
+                ClearSelection();
             }
 
             this.Invalidate();
@@ -84,7 +91,7 @@ namespace GW2_Live
 
         public void SpecialSelect(int x, int y)
         {
-            selectedKeypoints.Clear();
+            ClearSelection();
 
             // TODO: this needs to be for a route point
             var p = GetPointAtPixel(x, y);

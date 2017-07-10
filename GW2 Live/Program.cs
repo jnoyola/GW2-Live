@@ -38,7 +38,13 @@ using System.Windows.Forms;
  *   d. Move the mouse to where the cursor was found, right a few pixels, and down a few pixels (measure an approximate distance for this)
  *   e. Double click to equip
  *   f. Verify that a Steel Mining Pick is now equipped.
- * 3.
+ * 3. Find mining nodes
+ *   a. Turn off all map icons
+ *   b. Walk along route
+ *   c. Screenshot minimap
+ *   d. Compare minimap to tile map
+ *     1. If There are a cluster of pixels that are all significantly different from the corresponding nearby pixels, there must be an icon here
+ *     2. Check the color of the icon to know which type of resource node it is
  * 
  * 
  * Architecture

@@ -105,15 +105,15 @@ namespace GW2_Live
             }
 
 
-            Task.Run(async () =>
-            {
-                for (int i = 0; i < 10; ++i)
-                {
-                    await Task.Delay(2000);
-                    var b = await proc.TakeScreenshot();
-                    b.Save($"c:\\users\\Jonathan\\Desktop\\shots\\test{i}.png", System.Drawing.Imaging.ImageFormat.Png);
-                }
-            }).GetAwaiter().GetResult();
+            //Task.Run(async () =>
+            //{
+            //    for (int i = 0; i < 1; ++i)
+            //    {
+            //        await Task.Delay(2000);
+            //        var b = await proc.TakeScreenshot();
+            //        b.Save($"c:\\users\\Jonathan\\Desktop\\shot{i}.png", System.Drawing.Imaging.ImageFormat.Png);
+            //    }
+            //}).GetAwaiter().GetResult();
         }
 
         private async Task SetupMumble()
@@ -292,6 +292,8 @@ namespace GW2_Live
         private void saveButton_Click(object sender, EventArgs e)
         {
             EndEdit();
+
+            mapView.Plan.SaveToFile();
         }
 
         private void resetButton_Click(object sender, EventArgs e)
