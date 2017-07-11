@@ -47,6 +47,7 @@
             this.editButton = new System.Windows.Forms.Button();
             this.planningLabel = new System.Windows.Forms.Label();
             this.mapView = new GW2_Live.MapView();
+            this.pathButton = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.livePage.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -177,6 +178,7 @@
             // 
             // planningPage
             // 
+            this.planningPage.Controls.Add(this.pathButton);
             this.planningPage.Controls.Add(this.hotkeyLabel);
             this.planningPage.Controls.Add(this.label4);
             this.planningPage.Controls.Add(this.resetButton);
@@ -267,6 +269,15 @@
             this.mapView.TabStop = false;
             this.mapView.Click += new System.EventHandler(this.mapView_Click);
             // 
+            // pathButton
+            // 
+            this.pathButton.Location = new System.Drawing.Point(7, 250);
+            this.pathButton.Name = "pathButton";
+            this.pathButton.Size = new System.Drawing.Size(58, 30);
+            this.pathButton.TabIndex = 9;
+            this.pathButton.Text = "Path";
+            this.pathButton.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
@@ -309,6 +320,7 @@
         private System.Windows.Forms.Button editButton;
         private MapView mapView;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button pathButton;
         private System.Windows.Forms.Label hotkeyLabel;
     }
 }
