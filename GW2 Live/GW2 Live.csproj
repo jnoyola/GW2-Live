@@ -9,6 +9,8 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
+
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
   </ItemGroup>
@@ -28,9 +30,21 @@
     <Compile Update="Form1.Designer.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Form1.Designer.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Form1.Designer.resx</DependentUpon>
+    </Compile>
     <Compile Update="MapView.cs">
       <SubType>Component</SubType>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Form1.Designer.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Form1.Designer.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

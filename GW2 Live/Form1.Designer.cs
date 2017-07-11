@@ -258,8 +258,10 @@
             // mapView
             // 
             this.mapView.BackColor = System.Drawing.Color.LightGray;
+            this.mapView.IsEditing = false;
             this.mapView.Location = new System.Drawing.Point(71, 15);
             this.mapView.Name = "mapView";
+            this.mapView.Plan = null;
             this.mapView.Size = new System.Drawing.Size(500, 500);
             this.mapView.TabIndex = 5;
             this.mapView.TabStop = false;
