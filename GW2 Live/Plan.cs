@@ -22,6 +22,17 @@ namespace GW2_Live
                 Y = y;
                 Tris = new HashSet<Tri>();
             }
+
+            public override bool Equals(object obj)
+            {
+                Point other = obj as Point;
+                return other.X == X && other.Y == Y;
+            }
+
+            public override int GetHashCode()
+            {
+                return (int)(X * Y);
+            }
         }
 
         public class Tri
