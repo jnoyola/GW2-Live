@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,7 +26,6 @@ namespace GW2_Live
 
         const int TileZoom = 7;
         const int TileWidth = 256;
-        const float MetersPerInch = 0.0254f;
         const int MapEditZoom = 4;
 
         const int WM_HOTKEY_MSG_ID = 0x0312;
@@ -39,14 +39,16 @@ namespace GW2_Live
         double mapY0;
         double mapX1;
         double mapY1;
-        Rectangle mapRect;
-        Timer mapUpdateTimer;
+        System.Windows.Forms.Timer mapUpdateTimer;
 
         Bitmap bitmap;
         object canvasLock = new object();
         int numTilesLeft;
 
         HotkeyHandler hotkeyHandler;
+
+        bool isPathing;
+        PathRecorder pathRecorder;
 
         public Form1()
         {
@@ -61,6 +63,7 @@ namespace GW2_Live
             editButton.Enabled = false;
             saveButton.Enabled = false;
             resetButton.Enabled = false;
+            pathButton.Enabled = false;
             hotkeyHandler = new HotkeyHandler(this, Keys.Add, hotkeyLabel);
 
             Task.Run(async () =>
@@ -173,7 +176,7 @@ namespace GW2_Live
                     int mapRectX1 = (int)map["map_rect"][1][0];
                     int mapRectY1 = (int)map["map_rect"][1][1];
 
-                    mapRect = new Rectangle(mapRectX0, mapRectY0, mapRectX1 - mapRectX0, mapRectY1 - mapRectY0);
+                    mumble.SetMapRect(mapRectX0, mapRectY0, mapRectX1 - mapRectX0, mapRectY1 - mapRectY0);
                 }
             }
             
@@ -277,11 +280,12 @@ namespace GW2_Live
             editButton.Enabled = false;
             saveButton.Enabled = true;
             resetButton.Enabled = true;
+            pathButton.Enabled = true;
 
             hotkeyHandler.ListenForHotkey();
             UpdateMap();
 
-            mapUpdateTimer = new Timer();
+            mapUpdateTimer = new System.Windows.Forms.Timer();
             mapUpdateTimer.Tick += new EventHandler(UpdateMapEvent);
             mapUpdateTimer.Interval = 100;
             mapUpdateTimer.Start();
@@ -299,6 +303,20 @@ namespace GW2_Live
         private void resetButton_Click(object sender, EventArgs e)
         {
             EndEdit();
+
+            Task.Run(async () =>
+            {
+                mapView.Plan = await Plan.LoadOrCreate(identity.map_id);
+                mapView.Invalidate();
+            });
+        }
+
+        private void tabControl_Selecting(object sender, System.Windows.Forms.TabControlCancelEventArgs e)
+        {
+            if (mapView.IsEditing)
+            {
+                e.Cancel = true;
+            }
         }
 
         private void EndEdit()
@@ -314,6 +332,7 @@ namespace GW2_Live
             editButton.Enabled = true;
             saveButton.Enabled = false;
             resetButton.Enabled = false;
+            pathButton.Enabled = false;
         }
 
         private void UpdateMapEvent(Object myObject, EventArgs myEventArgs)
@@ -323,16 +342,9 @@ namespace GW2_Live
 
         private void UpdateMap()
         {
-            GetPlayerPosition(out float x, out float y);
-            mapView.SetPlayerPosition(x, y, mumble.GetVx(), mumble.GetVy());
+            mapView.SetPlayerPosition(mumble.GetPercentX(), mumble.GetPercentY(), mumble.GetVx(), mumble.GetVy());
             mapView.SetScale(MapEditZoom);
             mapView.Invalidate();
-        }
-
-        private void GetPlayerPosition(out float x, out float y)
-        {
-            x = (mumble.GetX() / MetersPerInch - mapRect.X) / mapRect.Width;
-            y = 1 - (mumble.GetY() / MetersPerInch - mapRect.Y) / mapRect.Height;
         }
 
         private void hotkeyLabel_Click(object sender, EventArgs e)
@@ -344,8 +356,7 @@ namespace GW2_Live
         {
             if (mapView.IsEditing)
             {
-                GetPlayerPosition(out float x, out float y);
-                mapView.Plan.AddPoint(x, y);
+                mapView.Plan.AddPoint(mumble.GetPercentX(), mumble.GetPercentY());
                 mapView.Invalidate();
             }
         }
@@ -379,6 +390,55 @@ namespace GW2_Live
                     mapView.Remove(me.X, me.Y);
                 }
             }
+        }
+
+        private void pathButton_Click(object sender, System.EventArgs e)
+        {
+            if (isPathing)
+            {
+                isPathing = false;
+
+                pathButton.SetPropertyThreadSafe("Text", "Path");
+                saveButton.Enabled = true;
+                resetButton.Enabled = true;
+
+                pathRecorder.StopRecording();
+            }
+            else
+            {
+                bool shouldStartPathing = true;
+
+                if (mapView.Plan.Route.Count > 0)
+                {
+                    DialogResult dialogResult = MessageBox.Show("This will overwrite any previously recorded path.\n Are you sure you want to proceed?", "Overwrite Path", MessageBoxButtons.YesNo);
+                    shouldStartPathing = (dialogResult == DialogResult.Yes);
+                }
+                
+                if (shouldStartPathing)
+                {
+                    isPathing = true;
+                    pathButton.SetPropertyThreadSafe("Text", "Done");
+                    saveButton.Enabled = false;
+                    resetButton.Enabled = false;
+
+                    pathRecorder = new PathRecorder(mumble, mapView);
+                    pathRecorder.Record();
+                }
+            }
+        }
+
+        private void liveStartButton_Click(object sender, System.EventArgs e)
+        {
+            proc.SetForeground();
+            Thread.Sleep(3000);
+            Bitmap b = proc.TakeScreenshot().Result;
+            Thread.Sleep(1000);
+            InputHandler.SendString("i");
+            Thread.Sleep(1000);
+            Bitmap c = proc.TakeScreenshot().Result;
+            c.Save($"c:\\users\\Jonathan\\Desktop\\after.png", System.Drawing.Imaging.ImageFormat.Png);
+            var r = GraphicsUtils.FindWindow(b, c);
+            int i = 0;
         }
     }
 }

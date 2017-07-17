@@ -13,6 +13,7 @@ namespace GW2_Live
     {
         private const float KeypointRadius = 8;
         private readonly Brush TriBrush = new SolidBrush(Color.FromArgb(150, 255, 100, 100));
+        private readonly Pen RoutePen = new Pen(Brushes.Black, 5);
 
         public bool IsEditing { get; set; } = false;
 
@@ -193,6 +194,7 @@ namespace GW2_Live
                 DrawTris(pe.Graphics);
                 DrawPlayer(pe.Graphics);
                 DrawKeypoints(pe.Graphics);
+                DrawRoute(pe.Graphics);
             }
             else
             {
@@ -313,6 +315,22 @@ namespace GW2_Live
                     y - (KeypointRadius - 2),
                     2 * (KeypointRadius - 2),
                     2 * (KeypointRadius - 2));
+            }
+        }
+
+        private void DrawRoute(Graphics g)
+        {
+            if (Plan.Route.Count >= 2)
+            {
+                PointF[] points = new PointF[Plan.Route.Count];
+
+                for (int i = 0; i < Plan.Route.Count; ++i)
+                {
+                    var p = Plan.Route[i];
+                    points[i] = new PointF(p.X * this.Image.Width, p.Y * this.Image.Height);
+                }
+
+                g.DrawLines(RoutePen, points);
             }
         }
     }

@@ -40,6 +40,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.planningPage = new System.Windows.Forms.TabPage();
+            this.pathButton = new System.Windows.Forms.Button();
             this.hotkeyLabel = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.resetButton = new System.Windows.Forms.Button();
@@ -47,7 +48,6 @@
             this.editButton = new System.Windows.Forms.Button();
             this.planningLabel = new System.Windows.Forms.Label();
             this.mapView = new GW2_Live.MapView();
-            this.pathButton = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.livePage.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -68,6 +68,7 @@
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(590, 563);
             this.tabControl.TabIndex = 0;
+            this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
             // 
             // livePage
             // 
@@ -100,6 +101,7 @@
             this.liveStartButton.TabIndex = 1;
             this.liveStartButton.Text = "Start";
             this.liveStartButton.UseVisualStyleBackColor = true;
+            this.liveStartButton.Click += new System.EventHandler(this.liveStartButton_Click);
             // 
             // groupBox1
             // 
@@ -195,6 +197,16 @@
             this.planningPage.Text = "GW2 Planning";
             this.planningPage.UseVisualStyleBackColor = true;
             // 
+            // pathButton
+            // 
+            this.pathButton.Location = new System.Drawing.Point(7, 250);
+            this.pathButton.Name = "pathButton";
+            this.pathButton.Size = new System.Drawing.Size(58, 30);
+            this.pathButton.TabIndex = 9;
+            this.pathButton.Text = "Path";
+            this.pathButton.UseVisualStyleBackColor = true;
+            this.pathButton.Click += new System.EventHandler(this.pathButton_Click);
+            // 
             // hotkeyLabel
             // 
             this.hotkeyLabel.BackColor = System.Drawing.Color.White;
@@ -268,15 +280,6 @@
             this.mapView.TabIndex = 5;
             this.mapView.TabStop = false;
             this.mapView.Click += new System.EventHandler(this.mapView_Click);
-            // 
-            // pathButton
-            // 
-            this.pathButton.Location = new System.Drawing.Point(7, 250);
-            this.pathButton.Name = "pathButton";
-            this.pathButton.Size = new System.Drawing.Size(58, 30);
-            this.pathButton.TabIndex = 9;
-            this.pathButton.Text = "Path";
-            this.pathButton.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 

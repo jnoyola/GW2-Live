@@ -112,6 +112,7 @@ namespace GW2_Live
             MapId = mapId;
             Points = new HashSet<Point>();
             Tris = new HashSet<Tri>();
+            Route = new List<Point>();
         }
 
         public void AddPoint(float x, float y)
@@ -124,10 +125,15 @@ namespace GW2_Live
             Tris.Add(new Tri(points));
         }
 
-        public void AddRoutePoint(float x, float y)
+        public void AddRoutePoint(float x, float y, bool shouldIncludeTri = false)
         {
             Point p = new Point(x, y);
-            p.Tris.Add(GetTriContainingPoint(p));
+
+            if (shouldIncludeTri)
+            {
+                p.Tris.Add(GetTriContainingPoint(p));
+            }
+
             Route.Add(p);
         }
 
@@ -277,7 +283,7 @@ namespace GW2_Live
 
             foreach (var pointArray in jsonGraph.Route)
             {
-                plan.AddRoutePoint(pointArray[0], pointArray[1]);
+                plan.AddRoutePoint(pointArray[0], pointArray[1], true);
             }
 
             return plan;

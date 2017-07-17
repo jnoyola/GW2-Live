@@ -50,6 +50,11 @@ namespace GW2_Live
             }
         }
 
+        public void SetForeground()
+        {
+            captureProcess.BringProcessWindowToFront();
+        }
+
         public Task<Bitmap> TakeScreenshot()
         {
             return TakeScreenshot(gameRectangle);
