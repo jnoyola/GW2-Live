@@ -100,7 +100,7 @@ namespace GW2_Live
         private const ushort VK_RETURN = 0x0D;
 
         private static readonly float ScaleX = 65536f / GetSystemMetrics(SM_CXSCREEN);
-        private static readonly float ScaleY = 65536f / GetSystemMetrics(SM_CXSCREEN);
+        private static readonly float ScaleY = 65536f / GetSystemMetrics(SM_CYSCREEN);
 
         public static void SendMouseMove(int x, int y)
         {
@@ -137,6 +137,10 @@ namespace GW2_Live
             }
 
             SendInput(count, inputs, Marshal.SizeOf(typeof(INPUT)));
+            //SendInput(2, new INPUT[] {
+            //    CreateMouseInput(0, 0, 0, MOUSEEVENTF_LEFTDOWN),
+            //    CreateMouseInput(0, 0, 0, MOUSEEVENTF_LEFTUP),
+            //}, Marshal.SizeOf(typeof(INPUT)));
         }
 
         public static void SendMouseScroll(int delta)
@@ -150,6 +154,11 @@ namespace GW2_Live
                 Marshal.SizeOf(typeof(INPUT)));
         }
 
+        public static void SendKeyInteract()
+        {
+            SendKeys("f");
+        }
+
         public static void SendKeys(string inputStr)
         {
             INPUT[] inputs = new INPUT[2 * inputStr.Length];
@@ -159,6 +168,10 @@ namespace GW2_Live
             {
                 switch(c)
                 {
+                    case '~':
+                        inputs[++i] = CreateKeyInput(0, 1, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN);
+                        inputs[++i] = CreateKeyInput(0, 1, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP);
+                        break;
                     case 9:
                         inputs[++i] = CreateKeyInput(VK_TAB, 0, KEYEVENTF_KEYDOWN);
                         inputs[++i] = CreateKeyInput(VK_TAB, 0, KEYEVENTF_KEYUP);
@@ -182,7 +195,7 @@ namespace GW2_Live
         {
             INPUT input = new INPUT
             {
-                Type = 1
+                Type = 0
             };
             input.Data.Mouse = new MOUSEINPUT
             {

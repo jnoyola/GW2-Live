@@ -2,6 +2,8 @@
 using System.Windows.Forms;
 
 /* Plan
+ * 0. Setup
+ *   a. Zoom out all the way for optimal window detection. (This scales down lighting effects on changed pixels.)
  * 1. Purchase Steel Mining Pick (check character api to see if at least 100 count is already owned/equipped)
  *   a. Move to merchant
  *   b. Find vendor window

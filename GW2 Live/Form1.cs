@@ -431,19 +431,18 @@ namespace GW2_Live
         {
             proc.SetForeground();
             Thread.Sleep(1000);
-            Bitmap b = proc.TakeScreenshot().Result;
-            Thread.Sleep(1000);
-            InputHandler.SendKeys("f");
-            Thread.Sleep(2000);
-            Bitmap c = proc.TakeScreenshot().Result;
-            c.Save($"c:\\users\\Jonathan\\Desktop\\after.png", System.Drawing.Imaging.ImageFormat.Png);
-            var r = GraphicsUtils.FindWindow(b, c);
-            var l = GraphicsUtils.ToLightmap(c, r.Left, r.Top, 50, r.Height);
-            var m = GraphicsUtils.ToBitmap(l, 50, r.Height);
-            m.Save($"c:\\users\\Jonathan\\Desktop\\lightmap.png", System.Drawing.Imaging.ImageFormat.Png);
-            var t = GraphicsUtils.FindBlobs(l, 50, r.Height);
-            //var r = GraphicsUtils.FindWindow(b, c);
-            int i = 0;
+
+
+            Task.Run(async () =>
+            {
+                var h = new VendorWindowHandler(proc);
+                await h.Open(true);
+                await h.SelectTab(2);
+                await Task.Delay(2000);
+                InputHandler.SendKeys("~");
+                await h.Open(true);
+                await h.SelectTab(4);
+            });
         }
     }
 }

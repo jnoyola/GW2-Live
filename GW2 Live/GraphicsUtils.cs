@@ -138,43 +138,43 @@ namespace GW2_Live
 
         public struct Blob
         {
-            int x0;
-            int y0;
-            int x1;
-            int y1;
-            public int count;
+            public int X0;
+            public int Y0;
+            public int X1;
+            public int Y1;
+            public int Count;
 
             public void AddPoint(int x, int y)
             {
-                if (count == 0)
+                if (Count == 0)
                 {
-                    x0 = x;
-                    y0 = y;
-                    x1 = x;
-                    y1 = y;
-                    count = 1;
+                    X0 = x;
+                    Y0 = y;
+                    X1 = x;
+                    Y1 = y;
+                    Count = 1;
                 }
                 else
                 {
-                    if (x < x0)
+                    if (x < X0)
                     {
-                        x0 = x;
+                        X0 = x;
                     }
-                    else if (x > x1)
+                    else if (x > X1)
                     {
-                        x1 = x;
-                    }
-
-                    if (y < y0)
-                    {
-                        y0 = y;
-                    }
-                    else if (y > y1)
-                    {
-                        y1 = y;
+                        X1 = x;
                     }
 
-                    ++count;
+                    if (y < Y0)
+                    {
+                        Y0 = y;
+                    }
+                    else if (y > Y1)
+                    {
+                        Y1 = y;
+                    }
+
+                    ++Count;
                 }
             }
         }
@@ -225,7 +225,7 @@ namespace GW2_Live
                             }
                         }
 
-                        if (blob.count > 20)
+                        if (blob.Count > 20)
                         {
                             blobs.Add(blob);
                         }
@@ -240,7 +240,7 @@ namespace GW2_Live
             return blobs;
         }
 
-        private static bool[] Dilate(bool[] pixels, int width, int height, int dilation = 1)
+        public static bool[] Dilate(bool[] pixels, int width, int height, int dilation = 1)
         {
             bool[] newPixels = new bool[pixels.Length];
 
@@ -269,6 +269,46 @@ namespace GW2_Live
                     if (found)
                     {
                         newPixels[x * height + y] = true;
+                    }
+                }
+            }
+
+            return newPixels;
+        }
+
+        public static bool[] Erode(bool[] pixels, int width, int height, int erosion = 1)
+        {
+            bool[] newPixels = new bool[pixels.Length];
+            for (int i = 0; i < newPixels.Length; ++i)
+            {
+                newPixels[i] = true;
+            }
+
+            for (int x = 0; x < width; ++x)
+            {
+                for (int y = 0; y < height; ++y)
+                {
+                    bool found = false;
+                    for (int i = x - erosion; i <= x + erosion; ++i)
+                    {
+                        for (int j = y - erosion; j <= y + erosion; ++j)
+                        {
+                            if (i >= 0 && i < width && j >= 0 && j < height && !pixels[i * height + j])
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (found)
+                    {
+                        newPixels[x * height + y] = false;
                     }
                 }
             }
