@@ -6,6 +6,9 @@ namespace GW2_Live
     static class InputHandler
     {
         [DllImport("User32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
+
+        [DllImport("User32.dll")]
         private static extern int SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
         [DllImport("User32.dll")]
@@ -70,21 +73,84 @@ namespace GW2_Live
         {
             public int X;
             public int Y;
-            public uint MouseData;
+            public int MouseData;
             public uint Flags;
             public uint Time;
             public IntPtr ExtraInfo;
         }
 
-        private const int WM_KEYDOWN = 0x0100;
-        private const ushort VK_TAB = 0x09;
-        private const ushort VK_RETURN = 0x0D;
+        private const int SM_CXSCREEN = 0;
+        private const int SM_CYSCREEN = 1;
+        private const uint MOUSEEVENTF_MOVE = 0x0001;
+        private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        private const uint MOUSEEVENTF_LEFTUP = 0x0004;
+        private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        private const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+        private const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+        private const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
+        private const uint MOUSEEVENTF_WHEEL = 0x0800;
+        private const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
+        private const int WHEEL_DELTA = 120;
         private const uint KEYEVENTF_KEYDOWN = 0;
         private const uint KEYEVENTF_KEYUP = 2;
         private const uint KEYEVENTF_UNICODE = 4;
         private const uint KEYEVENTF_SCANCODE = 8;
+        private const int WM_KEYDOWN = 0x0100;
+        private const ushort VK_TAB = 0x09;
+        private const ushort VK_RETURN = 0x0D;
 
-        public static void SendString(string inputStr)
+        private static readonly float ScaleX = 65536f / GetSystemMetrics(SM_CXSCREEN);
+        private static readonly float ScaleY = 65536f / GetSystemMetrics(SM_CXSCREEN);
+
+        public static void SendMouseMove(int x, int y)
+        {
+            SendInput(
+                1,
+                new INPUT[]
+                {
+                    CreateMouseInput((int)(x * ScaleX), (int)(y * ScaleY), 0, MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE)
+                },
+                Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        public static void SendMouseClick(uint button = 0, uint count = 1)
+        {
+            switch (button)
+            {
+                case 1:
+                    button = MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP;
+                    break;
+                case 2:
+                    button = MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
+                    break;
+                default:
+                    button = MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
+                    break;
+            }
+
+            INPUT input = CreateMouseInput(0, 0, 0, button);
+
+            INPUT[] inputs = new INPUT[count];
+            for (int i = 0; i < count; ++i)
+            {
+                inputs[i] = input;
+            }
+
+            SendInput(count, inputs, Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        public static void SendMouseScroll(int delta)
+        {
+            SendInput(
+                1,
+                new INPUT[]
+                {
+                    CreateMouseInput(0, 0, delta * WHEEL_DELTA, MOUSEEVENTF_WHEEL)
+                },
+                Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        public static void SendKeys(string inputStr)
         {
             INPUT[] inputs = new INPUT[2 * inputStr.Length];
 
@@ -93,7 +159,7 @@ namespace GW2_Live
             {
                 switch(c)
                 {
-                    case 8:
+                    case 9:
                         inputs[++i] = CreateKeyInput(VK_TAB, 0, KEYEVENTF_KEYDOWN);
                         inputs[++i] = CreateKeyInput(VK_TAB, 0, KEYEVENTF_KEYUP);
                         break;
@@ -110,6 +176,25 @@ namespace GW2_Live
             }
 
             SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        private static INPUT CreateMouseInput(int x, int y, int mouseData, uint flags)
+        {
+            INPUT input = new INPUT
+            {
+                Type = 1
+            };
+            input.Data.Mouse = new MOUSEINPUT
+            {
+                X = x,
+                Y = y,
+                MouseData = mouseData,
+                Flags = flags,
+                Time = 0,
+                ExtraInfo = IntPtr.Zero
+            };
+
+            return input;
         }
 
         private static INPUT CreateKeyInput(ushort vk, ushort scan, uint flags)

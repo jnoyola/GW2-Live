@@ -433,7 +433,7 @@ namespace GW2_Live
             Thread.Sleep(1000);
             Bitmap b = proc.TakeScreenshot().Result;
             Thread.Sleep(1000);
-            InputHandler.SendString("f");
+            InputHandler.SendKeys("f");
             Thread.Sleep(2000);
             Bitmap c = proc.TakeScreenshot().Result;
             c.Save($"c:\\users\\Jonathan\\Desktop\\after.png", System.Drawing.Imaging.ImageFormat.Png);
