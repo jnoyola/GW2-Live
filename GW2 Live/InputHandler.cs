@@ -159,6 +159,11 @@ namespace GW2_Live
             SendKeys("f");
         }
 
+        public static void SendKeyEscape()
+        {
+            SendKeys("~");
+        }
+
         public static void SendKeys(string inputStr)
         {
             INPUT[] inputs = new INPUT[2 * inputStr.Length];

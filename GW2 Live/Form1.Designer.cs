@@ -48,6 +48,10 @@
             this.editButton = new System.Windows.Forms.Button();
             this.planningLabel = new System.Windows.Forms.Label();
             this.mapView = new GW2_Live.MapView();
+            this.label5 = new System.Windows.Forms.Label();
+            this.purchaseTabBox = new System.Windows.Forms.TextBox();
+            this.purchaseItemBox = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
             this.livePage.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -180,6 +184,10 @@
             // 
             // planningPage
             // 
+            this.planningPage.Controls.Add(this.purchaseItemBox);
+            this.planningPage.Controls.Add(this.label6);
+            this.planningPage.Controls.Add(this.purchaseTabBox);
+            this.planningPage.Controls.Add(this.label5);
             this.planningPage.Controls.Add(this.pathButton);
             this.planningPage.Controls.Add(this.hotkeyLabel);
             this.planningPage.Controls.Add(this.label4);
@@ -281,6 +289,46 @@
             this.mapView.TabStop = false;
             this.mapView.Click += new System.EventHandler(this.mapView_Click);
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Segoe UI Symbol", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(20, 283);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(30, 17);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "Tab";
+            // 
+            // purchaseTabBox
+            // 
+            this.purchaseTabBox.Location = new System.Drawing.Point(7, 303);
+            this.purchaseTabBox.MaxLength = 2;
+            this.purchaseTabBox.Name = "purchaseTabBox";
+            this.purchaseTabBox.Size = new System.Drawing.Size(58, 29);
+            this.purchaseTabBox.TabIndex = 11;
+            this.purchaseTabBox.Text = "2";
+            this.purchaseTabBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // purchaseItemBox
+            // 
+            this.purchaseItemBox.Location = new System.Drawing.Point(7, 358);
+            this.purchaseItemBox.MaxLength = 2;
+            this.purchaseItemBox.Name = "purchaseItemBox";
+            this.purchaseItemBox.Size = new System.Drawing.Size(58, 29);
+            this.purchaseItemBox.TabIndex = 13;
+            this.purchaseItemBox.Text = "14";
+            this.purchaseItemBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Segoe UI Symbol", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Location = new System.Drawing.Point(20, 338);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(33, 17);
+            this.label6.TabIndex = 12;
+            this.label6.Text = "Item";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
@@ -305,6 +353,8 @@
 
         #endregion
 
+        private System.Windows.Forms.TextBox purchaseItemBox;
+        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage livePage;
         private System.Windows.Forms.TabPage planningPage;
@@ -324,7 +374,14 @@
         private MapView mapView;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button pathButton;
+        private System.Windows.Forms.TextBox purchaseTabBox;
+        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label hotkeyLabel;
+
+        private void hotkeyLabel_Click(object sender, System.EventArgs e)
+        {
+
+        }
     }
 }
 

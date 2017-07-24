@@ -80,7 +80,7 @@ namespace GW2_Live
                         {
                             if (numRetries == 0)
                             {
-                                throw new Exception("TakeScreenshot failed for all retries");
+                                throw new Exception("TakeScreenshot failed for all retries.");
                             }
                             else
                             {
@@ -89,7 +89,6 @@ namespace GW2_Live
                         }
                         else
                         {
-                            captureProcess.CaptureInterface.DisplayInGameText("Screenshot captured...");
                             completionSource.TrySetResult(screenshot.ToBitmap());
                         }
                     }

@@ -33,6 +33,7 @@ namespace GW2_Live
         ProcessHandler proc;
         MumbleHandler mumble;
         CharacterIdentity identity;
+        VendorWindowHandler vendorWindow;
 
         string mapName;
         double mapX0;
@@ -107,7 +108,7 @@ namespace GW2_Live
                 throw new AggregateException("The game process could not be found", processExceptions);
             }
 
-
+            vendorWindow = new VendorWindowHandler(proc);
             //Task.Run(async () =>
             //{
             //    for (int i = 0; i < 1; ++i)
@@ -435,13 +436,15 @@ namespace GW2_Live
 
             Task.Run(async () =>
             {
-                var h = new VendorWindowHandler(proc);
-                await h.Open(true);
-                await h.SelectTab(2);
-                await Task.Delay(2000);
-                InputHandler.SendKeys("~");
-                await h.Open(true);
-                await h.SelectTab(4);
+                await vendorWindow.FullPurchase(2, 14);
+
+                //var h = new VendorWindowHandler(proc);
+                //await h.Open(true);
+                //await h.SelectTab(2);
+                //await Task.Delay(2000);
+                //InputHandler.SendKeys("~");
+                //await h.Open(true);
+                //await h.SelectTab(4);
             });
         }
     }
