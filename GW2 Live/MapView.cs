@@ -170,7 +170,7 @@ namespace GW2_Live
             float xx = ((x / trueScale) - offsetX) / this.Image.Width;
             float yy = ((y / trueScale) - offsetY) / this.Image.Height;
 
-            return Plan.GetTriContainingPoint(new Plan.Point(xx, yy));
+            return Plan.GetTriContainingPoint(xx, yy);
         }
 
         protected override void OnPaint(PaintEventArgs pe)

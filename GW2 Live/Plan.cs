@@ -131,7 +131,7 @@ namespace GW2_Live
 
             if (shouldIncludeTri)
             {
-                p.Tris.Add(GetTriContainingPoint(p));
+                p.Tris.Add(GetTriContainingPoint(x, y));
             }
 
             Route.Add(p);
@@ -169,14 +169,14 @@ namespace GW2_Live
             Route.Clear();
         }
 
-        public Tri GetTriContainingPoint(Point p)
+        public Tri GetTriContainingPoint(float x, float y)
         {
             foreach (Tri tri in Tris)
             {
                 var ps = tri.Points.ToArray();
                 float inverseOfTwiceArea = 1 / (-ps[1].Y * ps[2].X + ps[0].Y * (-ps[1].X + ps[2].X) + ps[0].X * (ps[1].Y - ps[2].Y) + ps[1].X * ps[2].Y);
-                float s = inverseOfTwiceArea * (ps[0].Y * ps[2].X - ps[0].X * ps[2].Y + (ps[2].Y - ps[0].Y) * p.X + (ps[0].X - ps[2].X) * p.Y);
-                float t = inverseOfTwiceArea * (ps[0].X * ps[1].Y - ps[0].Y * ps[1].X + (ps[0].Y - ps[1].Y) * p.X + (ps[1].X - ps[0].X) * p.Y);
+                float s = inverseOfTwiceArea * (ps[0].Y * ps[2].X - ps[0].X * ps[2].Y + (ps[2].Y - ps[0].Y) * x + (ps[0].X - ps[2].X) * y);
+                float t = inverseOfTwiceArea * (ps[0].X * ps[1].Y - ps[0].Y * ps[1].X + (ps[0].Y - ps[1].Y) * x + (ps[1].X - ps[0].X) * y);
 
                 if (s >= 0 && t >= 0 && (1 - s - t) >= 0)
                 {
@@ -187,7 +187,7 @@ namespace GW2_Live
             return null;
         }
 
-        public List<Tri> SearchForPathBetweenTris(Tri from, Tri to)
+        public IList<Tri> SearchForPathBetweenTris(Tri from, Tri to)
         {
             var alreadySeen = new HashSet<Tri>();
             var queue = new Queue<List<Tri>>();

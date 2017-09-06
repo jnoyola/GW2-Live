@@ -377,11 +377,6 @@
         private System.Windows.Forms.TextBox purchaseTabBox;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label hotkeyLabel;
-
-        private void hotkeyLabel_Click(object sender, System.EventArgs e)
-        {
-
-        }
     }
 }
 

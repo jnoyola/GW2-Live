@@ -102,6 +102,11 @@ namespace GW2_Live
         private static readonly float ScaleX = 65536f / GetSystemMetrics(SM_CXSCREEN);
         private static readonly float ScaleY = 65536f / GetSystemMetrics(SM_CYSCREEN);
 
+        public enum Keys
+        {
+            Escape = 1
+        }
+
         public static void SendMouseMove(int x, int y)
         {
             SendInput(
@@ -137,10 +142,6 @@ namespace GW2_Live
             }
 
             SendInput(count, inputs, Marshal.SizeOf(typeof(INPUT)));
-            //SendInput(2, new INPUT[] {
-            //    CreateMouseInput(0, 0, 0, MOUSEEVENTF_LEFTDOWN),
-            //    CreateMouseInput(0, 0, 0, MOUSEEVENTF_LEFTUP),
-            //}, Marshal.SizeOf(typeof(INPUT)));
         }
 
         public static void SendMouseScroll(int delta)
@@ -154,14 +155,16 @@ namespace GW2_Live
                 Marshal.SizeOf(typeof(INPUT)));
         }
 
-        public static void SendKeyInteract()
+        public static void SendKey(Keys key)
         {
-            SendKeys("f");
-        }
-
-        public static void SendKeyEscape()
-        {
-            SendKeys("~");
+            SendInput(
+                2,
+                new INPUT[]
+                {
+                    CreateKeyInput(0, (ushort)key, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN),
+                    CreateKeyInput(0, (ushort)key, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP)
+                },
+                Marshal.SizeOf(typeof(INPUT)));
         }
 
         public static void SendKeys(string inputStr)
@@ -231,6 +234,14 @@ namespace GW2_Live
             };
 
             return input;
+        }
+
+        public static class Game
+        {
+            public static void Interact()
+            {
+                SendKeys("f");
+            }
         }
     }
 }

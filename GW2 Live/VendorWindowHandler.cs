@@ -101,7 +101,7 @@ namespace GW2_Live
                 }
                 else
                 {
-                    InputHandler.SendKeyEscape();
+                    InputHandler.SendKey(InputHandler.Keys.Escape);
                     await Task.Delay(500);
                     await OpenAndMeasure(hasDialog, numRetries - 1);
                     return;
@@ -122,7 +122,7 @@ namespace GW2_Live
 
         private async Task RawOpen(bool hasDialog)
         {
-            InputHandler.SendKeyInteract();
+            InputHandler.Game.Interact();
             await Task.Delay(500);
 
             if (hasDialog)
