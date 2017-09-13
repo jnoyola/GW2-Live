@@ -1,4 +1,4 @@
-﻿namespace GW2_Live
+﻿namespace GW2_Live.UI
 {
     partial class Form1
     {
@@ -47,7 +47,7 @@
             this.saveButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
             this.planningLabel = new System.Windows.Forms.Label();
-            this.mapView = new GW2_Live.MapView();
+            this.mapView = new GW2_Live.UI.MapView();
             this.label5 = new System.Windows.Forms.Label();
             this.purchaseTabBox = new System.Windows.Forms.TextBox();
             this.purchaseItemBox = new System.Windows.Forms.TextBox();

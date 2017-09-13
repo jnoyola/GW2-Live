@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace GW2_Live
+namespace GW2_Live.GameInterface
 {
     static class GraphicsUtils
     {
@@ -33,7 +30,7 @@ namespace GW2_Live
 
             changedPixels = Dilate(changedPixels, width, height);
 
-            ToBitmap(changedPixels, width, height).Save($"c:\\users\\Jonathan\\Desktop\\changed.png", System.Drawing.Imaging.ImageFormat.Png);
+            //ToBitmap(changedPixels, width, height).Save($"c:\\users\\Jonathan\\Desktop\\changed.png", System.Drawing.Imaging.ImageFormat.Png);
 
             return FindLargestRectangle(changedPixels, width, height);
         }

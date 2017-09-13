@@ -9,8 +9,10 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GW2_Live.GameInterface;
+using GW2_Live.Player;
 
-namespace GW2_Live
+namespace GW2_Live.UI
 {
     public partial class Form1 : Form
     {

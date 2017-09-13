@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using GW2_Live.GameInterface;
+using GW2_Live.UI;
 
-namespace GW2_Live
+namespace GW2_Live.Player
 {
     class PathRecorder
     {

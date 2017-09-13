@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace GW2_Live
+namespace GW2_Live.GameInterface
 {
     static class InputHandler
     {

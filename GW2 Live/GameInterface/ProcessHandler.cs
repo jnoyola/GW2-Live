@@ -8,7 +8,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
-namespace GW2_Live
+namespace GW2_Live.GameInterface
 {
     class ProcessHandler
     {

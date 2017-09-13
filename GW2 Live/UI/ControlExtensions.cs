@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Windows.Forms;
 
-namespace GW2_Live
+namespace GW2_Live.UI
 {
     static class ControlExtensions
     {

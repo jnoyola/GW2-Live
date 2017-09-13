@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using GW2_Live.GameInterface;
 
-namespace GW2_Live
+namespace GW2_Live.Player
 {
     class VendorWindowHandler
     {

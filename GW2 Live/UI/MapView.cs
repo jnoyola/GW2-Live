@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using GW2_Live.Player;
 
-namespace GW2_Live
+namespace GW2_Live.UI
 {
     class MapView : PictureBox
     {

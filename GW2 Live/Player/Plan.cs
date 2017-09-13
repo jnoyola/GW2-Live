@@ -1,12 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace GW2_Live
+namespace GW2_Live.Player
 {
     class Plan
     {
@@ -218,6 +216,53 @@ namespace GW2_Live
             }
 
             return null;
+        }
+
+        public IList<Point> SearchForPointsConnectingTris(Tri from, Tri to)
+        {
+            var triPath = SearchForPathBetweenTris(from, to);
+
+            if (triPath.Count == 1)
+            {
+                // There is no via point required. We can go directly to the destination.
+                return null;
+            }
+
+            var list = new List<Point>();
+
+            for (int i = 0; i < triPath.Count - 1; ++i)
+            {
+                // Find the two shared points between the 2 tris as the interesection of their Points sets.
+                float[] xShared = new float[2];
+                float[] yShared = new float[2];
+                int j = 0;
+
+                foreach (Point pA in triPath[i].Points)
+                {
+                    foreach (Point pB in triPath[i + 1].Points)
+                    {
+                        if (pA.Equals(pB))
+                        {
+                            xShared[j] = pA.X;
+                            yShared[j] = pA.Y;
+                            ++j;
+                        }
+                    }
+                }
+
+                if (j != 2)
+                {
+                    throw new Exception($"Via point calculation couldn't find 2 points shared among adjacent tris. {i} shared points were found instead.");
+                }
+
+                // TODO: add some element of randomness here.
+                float x = (xShared[0] + xShared[1]) / 2;
+                float y = (yShared[0] + yShared[1]) / 2;
+
+                list.Add(new Point(x, y));
+            }
+
+            return list;
         }
 
         public void SaveToFile()
