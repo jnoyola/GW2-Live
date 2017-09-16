@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Test</AssemblyName>
+    <RootNamespace>Test</RootNamespace>
+    <TargetFramework>net461</TargetFramework>
+    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="4.19.2" />
+    <PackageReference Include="Moq" Version="4.5.21" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
+
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GW2 Live\GW2 Live.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GW2 Live", "GW2 Live\GW2 Li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Capture", "Capture\Capture.csproj", "{23178A3D-2AC0-419A-B1B6-59CA45191270}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{23178A3D-2AC0-419A-B1B6-59CA45191270}.Release|Any CPU.Build.0 = Release|Any CPU
 		{23178A3D-2AC0-419A-B1B6-59CA45191270}.Release|x86.ActiveCfg = Release|Any CPU
 		{23178A3D-2AC0-419A-B1B6-59CA45191270}.Release|x86.Build.0 = Release|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Debug|x86.Build.0 = Debug|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Release|x86.ActiveCfg = Release|Any CPU
+		{527A9B16-CA2C-4F60-9E64-6DAC95E59F4A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
