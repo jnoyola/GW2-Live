@@ -1,6 +1,6 @@
 ﻿namespace GW2_Live.Player
 {
-    abstract class Node
+    public abstract class Node
     {
         public Node Previous { get; set; }
         public Node Next { get; set; }
@@ -26,7 +26,7 @@
 
         public Node InsertAndGetNext(Node node)
         {
-            if (node.Priority > this.Priority)
+            if (node.Priority < this.Priority)
             {
                 return InsertBefore(node);
             }
@@ -42,7 +42,10 @@
 
         private Node InsertBefore(Node node)
         {
-            Previous.Next = node;
+            if (Previous != null)
+            {
+                Previous.Next = node;
+            }
             node.Previous = this.Previous;
             node.Next = this;
             this.Previous = node;
@@ -52,16 +55,19 @@
 
         private Node InsertAfter(Node node)
         {
+            if (Next != null)
+            {
+                Next.Previous = node;
+            }
+            node.Next = this.Next;
             this.Next = node;
             node.Previous = this;
-            node.Next = this.Next;
-            Next.Previous = node;
 
             return this;
         }
     }
 
-    class PathNode : Node
+    public class PathNode : Node
     {
         protected override int Priority { get; } = 2;
         public override bool ShouldTurnInPlace { get; } = false;
@@ -71,7 +77,7 @@
         }
     }
 
-    class GatherNode : Node
+    public class GatherNode : Node
     {
         protected override int Priority { get; } = 1;
         public override bool ShouldTurnInPlace { get; } = true;
@@ -81,7 +87,7 @@
         }
     }
 
-    class ViaNode : Node
+    public class ViaNode : Node
     {
         protected override int Priority { get; } = 0;
         public override bool ShouldTurnInPlace { get; } = false;
