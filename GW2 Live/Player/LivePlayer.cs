@@ -14,6 +14,7 @@ namespace GW2_Live.Player
         private static readonly TimeSpan GatherDelay = TimeSpan.FromSeconds(3);
         private const float DistanceThresholdSquared = 4;
         private const float SameNodeDistanceToleranceSquared = 4;
+        private const double AngleTolerance = 0.1;
 
         private IProcessHandler proc;
         private ICharacterStateProvider character;
@@ -50,7 +51,7 @@ namespace GW2_Live.Player
 
             // Start by turning in place and heading towards the start.
             await TurnToFace(CurrentDetourNode ?? CurrentRouteNode, cancellationToken);
-            input.MoveForward(true);
+            input.Move(1);
 
             // TODO: do something with the vendor node.
 
@@ -59,9 +60,23 @@ namespace GW2_Live.Player
                 bool isRoute = CurrentDetourNode == null;
                 Node currNode = isRoute ? CurrentRouteNode : CurrentDetourNode;
 
-                // TODO: turn towards currNode.
+                // Turn towards the target.
+                double angleDiff = MathUtils.GetAngleDiff(character.GetX(), character.GetY(), currNode.X, currNode.Y);
+                if (angleDiff > AngleTolerance)
+                {
+                    input.Turn(1);
+                }
+                else if (angleDiff < -AngleTolerance)
+                {
+                    input.Turn(-1);
+                }
+                else
+                {
+                    input.Turn(0);
+                }
 
-                if (GetDistSqr(character.GetX(), character.GetY(), currNode.X, currNode.Y) < DistanceThresholdSquared)
+                // Check if we've reached the target.
+                if (MathUtils.GetDistSqr(character.GetX(), character.GetY(), currNode.X, currNode.Y) < DistanceThresholdSquared)
                 {
                     // Update the state of the path we're following.
                     if (isRoute)
@@ -82,12 +97,12 @@ namespace GW2_Live.Player
                     // Turn in place if necessary.
                     if (currNode.ShouldTurnInPlace)
                     {
-                        input.MoveForward(false);
+                        input.Move(0);
 
                         Node nextNode = CurrentDetourNode ?? CurrentRouteNode;
                         await TurnToFace(nextNode, cancellationToken);
 
-                        input.MoveForward(true);
+                        input.Move(1);
                     }
                 }
 
@@ -191,7 +206,44 @@ namespace GW2_Live.Player
 
         private async Task TurnToFace(Node target, CancellationToken cancellationToken)
         {
-            // TODO
+            double initialDiff = MathUtils.GetAngleDiff(character.GetX(), character.GetY(), target.X, target.Y);
+
+            if (initialDiff > AngleTolerance)
+            {
+                input.Turn(1);
+            }
+            else if (initialDiff < -AngleTolerance)
+            {
+                input.Turn(-1);
+            }
+            else
+            {
+                return;
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                double diff = MathUtils.GetAngleDiff(character.GetX(), character.GetY(), target.X, target.Y);
+
+                if (initialDiff > 0)
+                {
+                    if (diff <= AngleTolerance)
+                    {
+                        input.Turn(0);
+                        return;
+                    }
+                }
+                else
+                {
+                    if (diff >= -AngleTolerance)
+                    {
+                        input.Turn(0);
+                        return;
+                    }
+                }
+
+                await Task.Delay(UpdateInterval, cancellationToken);
+            }
         }
 
         private async Task SearchForGatherNodes(CancellationToken cancellationToken)
@@ -302,27 +354,6 @@ namespace GW2_Live.Player
                 endNode.InsertAndGetNext(newNode);
                 endNode = newNode;
             }
-        }
-
-        private double GetAngleDiff(float xFrom, float yFrom, float xTo, float yTo)
-        {
-            double aFrom = Math.Atan2(yFrom, xFrom);
-            double aTo = Math.Atan2(yTo, xTo);
-
-            double da = aTo - aFrom;
-            if (da < 0)
-            {
-                da += 2 * Math.PI;
-            }
-
-            return Math.Min(da, 2 * Math.PI - da);
-        }
-
-        private float GetDistSqr(float x1, float y1, float x2, float y2)
-        {
-            float dx = x2 - x1;
-            float dy = y2 - y1;
-            return dx * dx + dy * dy;
         }
     }
 }

@@ -7,6 +7,9 @@ namespace GW2_Live.GameInterface
     {
         private readonly Keybindings keybindings;
 
+        private int movingDirection = 0;
+        private int turningDirection = 0;
+
         public InputHandler(Keybindings keybindings)
         {
             this.keybindings = keybindings;
@@ -27,51 +30,59 @@ namespace GW2_Live.GameInterface
             SendMouseScroll(delta);
         }
 
-        public void MoveForward(bool toggle)
+        public void Move(int direction)
         {
-            if (toggle)
+            if (Math.Sign(direction) != Math.Sign(movingDirection))
             {
-                SendKeyDown(keybindings.MoveForward);
-            }
-            else
-            {
-                SendKeyUp(keybindings.MoveForward);
+                // Stop moving previous direction.
+                if (movingDirection > 0)
+                {
+                    SendKeyUp(keybindings.MoveForward);
+                }
+                else if (movingDirection < 0)
+                {
+                    SendKeyUp(keybindings.MoveBackward);
+                }
+
+                // Start moving new direction.
+                if (direction > 0)
+                {
+                    SendKeyDown(keybindings.MoveForward);
+                }
+                else if (direction < 0)
+                {
+                    SendKeyDown(keybindings.MoveBackward);
+                }
+
+                movingDirection = direction;
             }
         }
 
-        public void MoveBackward(bool toggle)
+        public void Turn(int direction)
         {
-            if (toggle)
+            if (Math.Sign(direction) != Math.Sign(turningDirection))
             {
-                SendKeyDown(keybindings.MoveBackward);
-            }
-            else
-            {
-                SendKeyUp(keybindings.MoveBackward);
-            }
-        }
+                // Stop turning previous direction.
+                if (turningDirection > 0)
+                {
+                    SendKeyUp(keybindings.TurnLeft);
+                }
+                else if (turningDirection < 0)
+                {
+                    SendKeyUp(keybindings.TurnRight);
+                }
 
-        public void TurnLeft(bool toggle)
-        {
-            if (toggle)
-            {
-                SendKeyDown(keybindings.TurnLeft);
-            }
-            else
-            {
-                SendKeyUp(keybindings.TurnLeft);
-            }
-        }
+                // Start turning new direction.
+                if (direction > 0)
+                {
+                    SendKeyDown(keybindings.TurnLeft);
+                }
+                else if (direction < 0)
+                {
+                    SendKeyDown(keybindings.TurnRight);
+                }
 
-        public void TurnRight(bool toggle)
-        {
-            if (toggle)
-            {
-                SendKeyDown(keybindings.TurnRight);
-            }
-            else
-            {
-                SendKeyUp(keybindings.TurnRight);
+                turningDirection = direction;
             }
         }
 

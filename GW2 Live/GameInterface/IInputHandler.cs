@@ -6,10 +6,8 @@
         void Click(uint button = 0, uint count = 1);
         void Scroll(int delta);
 
-        void MoveForward(bool toggle);
-        void MoveBackward(bool toggle);
-        void TurnLeft(bool toggle);
-        void TurnRight(bool toggle);
+        void Move(int direction);
+        void Turn(int direction);
 
         void Interact();
         void Escape();
