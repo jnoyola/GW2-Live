@@ -34,6 +34,7 @@ namespace GW2_Live.UI
 
         ProcessHandler proc;
         MumbleHandler mumble;
+        InputHandler input;
         CharacterIdentity identity;
         VendorWindowHandler vendorWindow;
 
@@ -71,6 +72,7 @@ namespace GW2_Live.UI
 
             Task.Run(async () =>
             {
+                SetupInput();
                 SetupProcess();
                 await SetupMumble();
                 await LoadMap();
@@ -83,6 +85,11 @@ namespace GW2_Live.UI
             base.OnClosing(e);
 
             mumble?.Dispose();
+        }
+
+        private void SetupInput()
+        {
+            input = new InputHandler(new Keybindings());
         }
 
         private void SetupProcess()
@@ -110,7 +117,7 @@ namespace GW2_Live.UI
                 throw new AggregateException("The game process could not be found", processExceptions);
             }
 
-            vendorWindow = new VendorWindowHandler(proc);
+            vendorWindow = new VendorWindowHandler(proc, input);
             //Task.Run(async () =>
             //{
             //    for (int i = 0; i < 1; ++i)

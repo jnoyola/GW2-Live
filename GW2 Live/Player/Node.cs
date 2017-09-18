@@ -22,6 +22,11 @@
             return other.X == X && other.Y == Y && other.ShouldTurnInPlace == ShouldTurnInPlace;
         }
 
+        public override int GetHashCode()
+        {
+            return (int)(X * Y);
+        }
+
         public Node RemoveAndGetNext()
         {
             Previous.Next = this.Next;

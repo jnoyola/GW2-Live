@@ -11,7 +11,8 @@ namespace GW2_Live.Player
         private const int TabBarWidth = 50;
         private const int ItemOffsetFromTabX = 100;
 
-        private ProcessHandler proc;
+        private IProcessHandler proc;
+        private IInputHandler input;
 
         private bool isMeasured;
 
@@ -23,9 +24,10 @@ namespace GW2_Live.Player
         private int itemY;
         private int itemDy;
 
-        public VendorWindowHandler(ProcessHandler proc)
+        public VendorWindowHandler(IProcessHandler proc, IInputHandler input)
         {
             this.proc = proc;
+            this.input = input;
         }
 
         public async Task FullPurchase(int tab, int item, bool hasDialog = true)
@@ -54,9 +56,9 @@ namespace GW2_Live.Player
                 throw new Exception("SelectTab failed because VendorWindowHandler has not been measured");
             }
 
-            InputHandler.SendMouseMove(tabX, tabY + (tab - 1) * tabDy);
+            input.MoveMouse(tabX, tabY + (tab - 1) * tabDy);
             await Task.Delay(100);
-            InputHandler.SendMouseClick();
+            input.Click();
             await Task.Delay(100);
         }
 
@@ -67,9 +69,9 @@ namespace GW2_Live.Player
                 throw new Exception("Purchase failed because VendorWindowHandler has not been measured");
             }
 
-            InputHandler.SendMouseMove(itemX, itemY + (item - 1) * itemDy);
+            input.MoveMouse(itemX, itemY + (item - 1) * itemDy);
             await Task.Delay(100);
-            InputHandler.SendMouseClick(count: 1);
+            input.Click(count: 1); // TODO: change count to 2 to actually purchase.
             await Task.Delay(100);
         }
 
@@ -99,7 +101,7 @@ namespace GW2_Live.Player
                 }
                 else
                 {
-                    InputHandler.SendKey(InputHandler.Keys.Escape);
+                    input.Escape();
                     await Task.Delay(500);
                     await OpenAndMeasure(hasDialog, numRetries - 1);
                     return;
@@ -120,14 +122,14 @@ namespace GW2_Live.Player
 
         private async Task RawOpen(bool hasDialog)
         {
-            InputHandler.Game.Interact();
+            input.Interact();
             await Task.Delay(500);
 
             if (hasDialog)
             {
-                InputHandler.SendMouseMove(700, 260);
+                input.MoveMouse(700, 260);
                 await Task.Delay(100);
-                InputHandler.SendMouseClick();
+                input.Click();
                 await Task.Delay(500);
             }
         }
