@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 
 namespace GW2_Live.GameInterface
 {
-    class ProcessHandler
+    public class ProcessHandler : IProcessHandler
     {
         [DllImport("user32.dll")]
         public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);

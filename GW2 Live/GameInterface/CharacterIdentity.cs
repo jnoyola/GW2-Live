@@ -1,6 +1,6 @@
 ﻿namespace GW2_Live.GameInterface
 {
-    struct CharacterIdentity
+    public struct CharacterIdentity
     {
         #pragma warning disable 0649
         // These fields are assigned by Json deserialization.

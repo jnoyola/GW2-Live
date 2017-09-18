@@ -3,7 +3,95 @@ using System.Runtime.InteropServices;
 
 namespace GW2_Live.GameInterface
 {
-    static class InputHandler
+    partial class InputHandler : IInputHandler
+    {
+        private readonly Keybindings keybindings;
+
+        public InputHandler(Keybindings keybindings)
+        {
+            this.keybindings = keybindings;
+        }
+
+        public void MoveMouse(int x, int y)
+        {
+            SendMouseMove(x, y);
+        }
+
+        public void Click(uint button = 0, uint count = 1)
+        {
+            SendMouseClick(button, count);
+        }
+
+        public void Scroll(int delta)
+        {
+            SendMouseScroll(delta);
+        }
+
+        public void MoveForward(bool toggle)
+        {
+            if (toggle)
+            {
+                SendKeyDown(keybindings.MoveForward);
+            }
+            else
+            {
+                SendKeyUp(keybindings.MoveForward);
+            }
+        }
+
+        public void MoveBackward(bool toggle)
+        {
+            if (toggle)
+            {
+                SendKeyDown(keybindings.MoveBackward);
+            }
+            else
+            {
+                SendKeyUp(keybindings.MoveBackward);
+            }
+        }
+
+        public void TurnLeft(bool toggle)
+        {
+            if (toggle)
+            {
+                SendKeyDown(keybindings.TurnLeft);
+            }
+            else
+            {
+                SendKeyUp(keybindings.TurnLeft);
+            }
+        }
+
+        public void TurnRight(bool toggle)
+        {
+            if (toggle)
+            {
+                SendKeyDown(keybindings.TurnRight);
+            }
+            else
+            {
+                SendKeyUp(keybindings.TurnRight);
+            }
+        }
+
+        public void Interact()
+        {
+            SendKeyPress(keybindings.Interact);
+        }
+
+        public void Escape()
+        {
+            SendKeyPress(keybindings.Escape);
+        }
+
+        public void Type(string input)
+        {
+            SendString(input);
+        }
+    }
+
+    partial class InputHandler : IInputHandler
     {
         [DllImport("User32.dll")]
         private static extern int GetSystemMetrics(int nIndex);
@@ -96,18 +184,11 @@ namespace GW2_Live.GameInterface
         private const uint KEYEVENTF_UNICODE = 4;
         private const uint KEYEVENTF_SCANCODE = 8;
         private const int WM_KEYDOWN = 0x0100;
-        private const ushort VK_TAB = 0x09;
-        private const ushort VK_RETURN = 0x0D;
 
         private static readonly float ScaleX = 65536f / GetSystemMetrics(SM_CXSCREEN);
         private static readonly float ScaleY = 65536f / GetSystemMetrics(SM_CYSCREEN);
 
-        public enum Keys
-        {
-            Escape = 1
-        }
-
-        public static void SendMouseMove(int x, int y)
+        private static void SendMouseMove(int x, int y)
         {
             SendInput(
                 1,
@@ -118,7 +199,7 @@ namespace GW2_Live.GameInterface
                 Marshal.SizeOf(typeof(INPUT)));
         }
 
-        public static void SendMouseClick(uint button = 0, uint count = 1)
+        private static void SendMouseClick(uint button = 0, uint count = 1)
         {
             switch (button)
             {
@@ -144,7 +225,7 @@ namespace GW2_Live.GameInterface
             SendInput(count, inputs, Marshal.SizeOf(typeof(INPUT)));
         }
 
-        public static void SendMouseScroll(int delta)
+        private static void SendMouseScroll(int delta)
         {
             SendInput(
                 1,
@@ -155,45 +236,60 @@ namespace GW2_Live.GameInterface
                 Marshal.SizeOf(typeof(INPUT)));
         }
 
-        public static void SendKey(Keys key)
+        private static void SendKeyPress(ushort scanCode)
         {
+            // This method uses key scan codes.
+            // https://msdn.microsoft.com/en-us/library/aa299374(v=vs.60).aspx
+
             SendInput(
                 2,
                 new INPUT[]
                 {
-                    CreateKeyInput(0, (ushort)key, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN),
-                    CreateKeyInput(0, (ushort)key, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP)
+                    CreateKeyInput(0, scanCode, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN),
+                    CreateKeyInput(0, scanCode, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP)
                 },
                 Marshal.SizeOf(typeof(INPUT)));
         }
 
-        public static void SendKeys(string inputStr)
+        private static void SendKeyDown(ushort scanCode)
         {
-            INPUT[] inputs = new INPUT[2 * inputStr.Length];
+            // This method uses key scan codes.
+            // https://msdn.microsoft.com/en-us/library/aa299374(v=vs.60).aspx
+
+            SendInput(
+                1,
+                new INPUT[]
+                {
+                    CreateKeyInput(0, scanCode, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN)
+                },
+                Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        private static void SendKeyUp(ushort scanCode)
+        {
+            // This method uses key scan codes.
+            // https://msdn.microsoft.com/en-us/library/aa299374(v=vs.60).aspx
+
+            SendInput(
+                1,
+                new INPUT[]
+                {
+                    CreateKeyInput(0, scanCode, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP)
+                },
+                Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        private static void SendString(string input)
+        {
+            INPUT[] inputs = new INPUT[2 * input.Length];
 
             int i = -1;
-            foreach (ushort c in inputStr)
+            foreach (ushort c in input)
             {
-                switch(c)
-                {
-                    case '~':
-                        inputs[++i] = CreateKeyInput(0, 1, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN);
-                        inputs[++i] = CreateKeyInput(0, 1, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP);
-                        break;
-                    case 9:
-                        inputs[++i] = CreateKeyInput(VK_TAB, 0, KEYEVENTF_KEYDOWN);
-                        inputs[++i] = CreateKeyInput(VK_TAB, 0, KEYEVENTF_KEYUP);
-                        break;
-                    case 10:
-                        inputs[++i] = CreateKeyInput(VK_RETURN, 0, KEYEVENTF_KEYDOWN);
-                        inputs[++i] = CreateKeyInput(VK_RETURN, 0, KEYEVENTF_KEYUP);
-                        break;
-                    default:
-                        ushort k = (ushort)MapVirtualKey((uint)(VkKeyScan(c) & 0xFF), 0);
-                        inputs[++i] = CreateKeyInput(0, k, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN);
-                        inputs[++i] = CreateKeyInput(0, k, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP);
-                        break;
-                }
+                // NOTE: this doesn't work for special characters (e.g. \t, \n) or key combinations (e.g. Shift + 5 => %).
+                ushort k = (ushort)MapVirtualKey((uint)(VkKeyScan(c) & 0xFF), 0);
+                inputs[++i] = CreateKeyInput(0, k, KEYEVENTF_SCANCODE | KEYEVENTF_KEYDOWN);
+                inputs[++i] = CreateKeyInput(0, k, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP);
             }
 
             SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
@@ -234,14 +330,6 @@ namespace GW2_Live.GameInterface
             };
 
             return input;
-        }
-
-        public static class Game
-        {
-            public static void Interact()
-            {
-                SendKeys("f");
-            }
         }
     }
 }

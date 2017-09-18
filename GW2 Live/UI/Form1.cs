@@ -300,7 +300,7 @@ namespace GW2_Live.UI
         {
             EndEdit();
 
-            mapView.Plan.SaveToFile();
+            mapView.Plan.Save();
         }
 
         private void resetButton_Click(object sender, EventArgs e)

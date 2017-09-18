@@ -16,6 +16,12 @@
             Y = y;
         }
 
+        public override bool Equals(object obj)
+        {
+            Node other = obj as Node;
+            return other.X == X && other.Y == Y && other.ShouldTurnInPlace == ShouldTurnInPlace;
+        }
+
         public Node RemoveAndGetNext()
         {
             Previous.Next = this.Next;
@@ -46,7 +52,13 @@
             {
                 Previous.Next = node;
             }
-            node.Previous = this.Previous;
+
+            if (node.Previous == null)
+            {
+                // Only overwrite if we're just stitching in a single node.
+                node.Previous = this.Previous;
+            }
+
             node.Next = this;
             this.Previous = node;
 
@@ -59,7 +71,13 @@
             {
                 Next.Previous = node;
             }
-            node.Next = this.Next;
+
+            if (node.Next == null)
+            {
+                // Only overwrite if we're just stitching in a single node.
+                node.Next = this.Next;
+            }
+
             this.Next = node;
             node.Previous = this;
 

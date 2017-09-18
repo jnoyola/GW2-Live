@@ -7,71 +7,76 @@ using GW2_Live.GameInterface;
 
 namespace GW2_Live.Player
 {
-    class LivePlayer
+    public class LivePlayer
     {
-        private ProcessHandler proc;
-        private MumbleHandler mumble;
+        private IProcessHandler proc;
+        private ICharacterStateProvider character;
+        private IPlanProvider planProvider;
         private Plan plan;
 
-        private Node currRouteNode;
-        private Node currDetourNode;
+        public Node CurrentRouteNode { get; private set; }
+        public Node CurrentDetourNode { get; private set; }
 
         private IList<Plan.Point> targets;
         private IList<Plan.Tri> cachedTriPath;
         private int cachedStartIndex;
         private Plan.Point viaPoint;
 
-        public LivePlayer(ProcessHandler proc, MumbleHandler mumble)
+        public LivePlayer(IProcessHandler proc, ICharacterStateProvider character) : this(proc, character, null)
+        {
+        }
+
+        public LivePlayer(IProcessHandler proc, ICharacterStateProvider character, IPlanProvider planProvider)
         {
             this.proc = proc;
-            this.mumble = mumble;
+            this.character = character;
+            this.planProvider = planProvider;
         }
 
         public async Task PlayAsync(CancellationToken cancellationToken)
         {
-            plan = await Plan.LoadFromFile(mumble.GetIdentity().map_id);
-            GenerateRoute();
+            await LoadAndGenerateRoute();
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 Node currNode;
                 Node foundNode;
 
-                if (currDetourNode != null)
+                if (CurrentDetourNode != null)
                 {
                     // Continue along the detour.
-                    currNode = currDetourNode;
+                    currNode = CurrentDetourNode;
                     foundNode = null;// await MoveAndSearch(currNode, cancellationToken);
-                    currDetourNode = currDetourNode.Next;
+                    CurrentDetourNode = CurrentDetourNode.Next;
                 }
                 else
                 {
                     // Continue along the route.
-                    currNode = currRouteNode;
+                    currNode = CurrentRouteNode;
                     foundNode = null;// await MoveAndSearch(currNode, cancellationToken);
-                    currRouteNode = currRouteNode.Next;
+                    CurrentRouteNode = CurrentRouteNode.Next;
                 }
 
                 if (foundNode != null)
                 {
                     // Add the foundNode and a path leading to it to the detour.
-                    if (currDetourNode == null)
+                    if (CurrentDetourNode == null)
                     {
                         FindPath(currNode, foundNode, out Node startNode, out Node endNode);
 
                         if (startNode == null)
                         {
-                            currDetourNode = foundNode;
+                            CurrentDetourNode = foundNode;
                         }
                         else
                         {
-                            currDetourNode = startNode;
+                            CurrentDetourNode = startNode;
                             endNode.InsertAndGetNext(foundNode);
                         }
                     }
                     else
                     {
-                        currDetourNode.InsertAndGetNext(foundNode);
+                        CurrentDetourNode.InsertAndGetNext(foundNode);
 
                         FindPath(foundNode.Previous, foundNode, out Node startNode, out Node endNode);
 
@@ -107,12 +112,14 @@ namespace GW2_Live.Player
             //}
         }
 
-        private void GenerateRoute()
+        public async Task LoadAndGenerateRoute()
         {
+            plan = await Plan.Load(character.GetIdentity().map_id, planProvider);
+
             var startPoint = plan.Route[0];
             plan.Route.Add(startPoint);
             var root = new PathNode(startPoint.X, startPoint.Y);
-            currRouteNode = root;
+            CurrentRouteNode = root;
 
             for (int i = 1; i < plan.Route.Count; ++i)
             {
@@ -123,20 +130,25 @@ namespace GW2_Live.Player
 
                 if (startNode == null || endNode == null)
                 {
-                    endNode = currRouteNode;
+                    endNode = CurrentRouteNode;
                 }
                 else
                 {
                     // Stitch in the startNode.
-                    currRouteNode.InsertAndGetNext(startNode);
+                    CurrentRouteNode.InsertAndGetNext(startNode);
                 }
 
                 // Stitch in the endNode and next route node.
-                currRouteNode = new PathNode(plan.Route[i].X, plan.Route[i].Y);
-                endNode.InsertAndGetNext(currRouteNode);
+                CurrentRouteNode = new PathNode(plan.Route[i].X, plan.Route[i].Y);
+                endNode.InsertAndGetNext(CurrentRouteNode);
             }
 
-            currRouteNode = root;
+            // Remove the duplicate end/start node and finish the loop.
+            plan.Route.RemoveAt(plan.Route.Count - 1);
+            CurrentRouteNode.Previous.Next = root;
+            root.Previous = CurrentRouteNode.Previous;
+
+            CurrentRouteNode = root;
         }
 
         //private async Task<Plan.Point> MoveAndSearch(float xTarget, float yTarget, CancellationToken cancellationToken, double distanceThreshold = 2)

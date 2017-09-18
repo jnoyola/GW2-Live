@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace GW2_Live.GameInterface
 {
-    class MumbleHandler : IDisposable
+    class MumbleHandler : ICharacterStateProvider, IDisposable
     {
+        private const int ActiveCheckInterval = 100;
         private static readonly string MumbleLinkName = "MumbleLink";
         private const int MumbleLinkSize = 5460;
         private const float MetersPerInch = 0.0254f;
@@ -32,13 +33,13 @@ namespace GW2_Live.GameInterface
             file.Dispose();
         }
 
-        public async Task WaitForActive(int interval = 100)
+        public async Task WaitForActive()
         {
             int uiTick = GetUiTick();
 
             while (true)
             {
-                await Task.Delay(interval);
+                await Task.Delay(ActiveCheckInterval);
 
                 if (GetUiTick() != uiTick)
                     return;

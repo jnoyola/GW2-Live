@@ -6,8 +6,16 @@ using System.Threading.Tasks;
 
 namespace GW2_Live.Player
 {
-    class Plan
+    public class Plan
     {
+        public struct Serializable
+        {
+            public List<float[]> Points { get; set; }
+            public List<int[]> Tris { get; set; }
+            public List<float[]> Route { get; set; }
+            public int VendorPoint { get; set; }
+        }
+
         public class Point
         {
             public float X { get; }
@@ -88,25 +96,21 @@ namespace GW2_Live.Player
             }
         }
 
-        public struct JsonPlan
-        {
-            public List<float[]> Points { get; set; }
-            public List<int[]> Tris { get; set; }
-            public List<float[]> Route { get; set; }
-            public int VendorPoint { get; set; }
-        }
-
-        private static readonly string Folder = "plans";
-        private static readonly string FileFormat = "{0}.json";
-
         public int MapId { get; }
         public HashSet<Point> Points { get; }
         public HashSet<Tri> Tris { get; }
         public List<Point> Route { get; }
         public Point VendorPoint { get; private set; }
 
-        public Plan(int mapId)
+        private IPlanProvider planProvider;
+
+        public Plan(int mapId) : this(mapId, PlanProvider.Instance)
         {
+        }
+
+        public Plan(int mapId, IPlanProvider planProvider)
+        {
+            this.planProvider = planProvider;
             MapId = mapId;
             Points = new HashSet<Point>();
             Tris = new HashSet<Tri>();
@@ -265,56 +269,61 @@ namespace GW2_Live.Player
             return list;
         }
 
-        public void SaveToFile()
+        public void Save()
         {
-            var jsonPoints = new List<float[]>();
-            var jsonTris = new List<int[]>();
-            var jsonRoute = new List<float[]>();
-            int jsonVendorPoint = -1;
+            var pointList = new List<float[]>();
+            var triList = new List<int[]>();
+            var routeList = new List<float[]>();
+            int vendorPointIndex = -1;
 
             var pointIndices = new Dictionary<Point, int>();
 
             foreach (Point p in Points)
             {
-                jsonPoints.Add(new float[2] { p.X, p.Y });
-                pointIndices[p] = jsonPoints.Count - 1;
+                pointList.Add(new float[2] { p.X, p.Y });
+                pointIndices[p] = pointList.Count - 1;
             }
 
             foreach (Tri t in Tris)
             {
-                jsonTris.Add(t.Points.Select(p => pointIndices[p]).ToArray());
+                triList.Add(t.Points.Select(p => pointIndices[p]).ToArray());
             }
 
             foreach (Point p in Route)
             {
-                jsonRoute.Add(new float[2] { p.X, p.Y });
+                routeList.Add(new float[2] { p.X, p.Y });
 
                 if (p == VendorPoint)
                 {
-                    jsonVendorPoint = jsonRoute.Count - 1;
+                    vendorPointIndex = routeList.Count - 1;
                 }
             }
 
-            var jsonPlan = new JsonPlan { Points = jsonPoints, Tris = jsonTris, Route = jsonRoute, VendorPoint = jsonVendorPoint };
+            var serializablePlan = new Plan.Serializable { Points = pointList, Tris = triList, Route = routeList, VendorPoint = vendorPointIndex };
 
-            FileManager.SaveToFile(jsonPlan, Folder, String.Format(FileFormat, MapId));
+            planProvider.Save(serializablePlan, MapId);
         }
 
-        public static async Task<Plan> LoadFromFile(int mapId)
+        public static async Task<Plan> Load(int mapId, IPlanProvider planProvider = null)
         {
-            Plan plan = new Plan(mapId);
+            if (planProvider == null)
+            {
+                planProvider = PlanProvider.Instance;
+            }
+
+            Plan plan = new Plan(mapId, planProvider);
             List<Point> pointList = new List<Point>();
 
-            var jsonGraph = await FileManager.ReadFromFile<JsonPlan>(Folder, String.Format(FileFormat, mapId));
+            var serializablePlan = await planProvider.Load(mapId);
 
-            foreach (var pointArray in jsonGraph.Points)
+            foreach (var pointArray in serializablePlan.Points)
             {
                 Point p = new Point(pointArray[0], pointArray[1]);
                 plan.Points.Add(p);
                 pointList.Add(p);
             }
 
-            foreach (var triArray in jsonGraph.Tris)
+            foreach (var triArray in serializablePlan.Tris)
             {
                 HashSet<Point> triPoints = new HashSet<Point>();
 
@@ -326,10 +335,12 @@ namespace GW2_Live.Player
                 plan.AddTri(triPoints);
             }
 
-            foreach (var pointArray in jsonGraph.Route)
+            foreach (var pointArray in serializablePlan.Route)
             {
                 plan.AddRoutePoint(pointArray[0], pointArray[1], true);
             }
+
+            plan.VendorPoint = plan.Route[serializablePlan.VendorPoint];
 
             return plan;
         }
@@ -338,7 +349,7 @@ namespace GW2_Live.Player
         {
             try
             {
-                return await LoadFromFile(mapId);
+                return await Load(mapId);
             }
             catch (Exception ex) when (ex is FileNotFoundException || ex is DirectoryNotFoundException)
             {
