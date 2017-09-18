@@ -1,6 +1,6 @@
 ﻿namespace GW2_Live.GameInterface
 {
-    interface IInputHandler
+    public interface IInputHandler
     {
         void MoveMouse(int x, int y);
         void Click(uint button = 0, uint count = 1);

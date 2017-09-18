@@ -18,8 +18,9 @@ namespace Test.Player
         {
             var proc = new Mock<IProcessHandler>().Object;
             var character = new Mock<ICharacterStateProvider>().Object;
+            var input = new Mock<IInputHandler>().Object;
             var planProvider = new TestPlanProvider();
-            var livePlayer = new LivePlayer(proc, character, planProvider);
+            var livePlayer = new LivePlayer(proc, character, input, planProvider);
             var nodes = new List<Node>();
             var validators = new List<Action<Node>>()
             {
