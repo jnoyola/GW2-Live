@@ -22,10 +22,11 @@ namespace GW2_Live.Player
         private IPlanProvider planProvider;
         private Plan plan;
 
-        public Node CurrentRouteNode { get; private set; }
-        public Node CurrentDetourNode { get; private set; }
-        public HashSet<Node> CurrentFoundNodes { get; private set; }
-        private object detourLock;
+        public int NextRouteIndex { get; private set; }
+        public List<NNode> Route { get; private set; }
+        public Queue<NNode> FoundNodes { get; private set; }
+        public Queue<NNode> ViaRoute { get; private set; }
+        private object foundNodeLock;
 
         private IList<Plan.Point> targets;
         private IList<Plan.Tri> cachedTriPath;
@@ -47,7 +48,8 @@ namespace GW2_Live.Player
         {
             await LoadAndGenerateRoute();
 
-            // TODO: start background async task to search for gather nodes and update CurrentDetourNode.
+            // Fire and forget task to continuously search for gather nodes and update CurrentDetourNode.
+            await Task.Run(() => SearchForGatherNodes(cancellationToken));
 
             // Start by turning in place and heading towards the start.
             await TurnToFace(CurrentDetourNode ?? CurrentRouteNode, cancellationToken);
@@ -169,39 +171,8 @@ namespace GW2_Live.Player
         {
             plan = await Plan.Load(character.GetIdentity().map_id, planProvider);
 
-            var startPoint = plan.Route[0];
-            plan.Route.Add(startPoint);
-            var root = new PathNode(startPoint.X, startPoint.Y);
-            CurrentRouteNode = root;
-
-            for (int i = 1; i < plan.Route.Count; ++i)
-            {
-                Node startNode, endNode;
-
-                // Find the path between the Tris containing the route nodes.
-                FindPath(plan.Route[i - 1].Tris.First(), plan.Route[i].Tris.First(), out startNode, out endNode);
-
-                if (startNode == null || endNode == null)
-                {
-                    endNode = CurrentRouteNode;
-                }
-                else
-                {
-                    // Stitch in the startNode.
-                    CurrentRouteNode.InsertAndGetNext(startNode);
-                }
-
-                // Stitch in the endNode and next route node.
-                CurrentRouteNode = new PathNode(plan.Route[i].X, plan.Route[i].Y);
-                endNode.InsertAndGetNext(CurrentRouteNode);
-            }
-
-            // Remove the duplicate end/start node and finish the loop.
-            plan.Route.RemoveAt(plan.Route.Count - 1);
-            CurrentRouteNode.Previous.Next = root;
-            root.Previous = CurrentRouteNode.Previous;
-
-            CurrentRouteNode = root;
+            NextRouteIndex = 0;
+            Route = plan.Route.Select(p => new NNode(p.X, p.Y, p.Tris.First())).ToList();
         }
 
         private async Task TurnToFace(Node target, CancellationToken cancellationToken)
@@ -246,48 +217,34 @@ namespace GW2_Live.Player
             }
         }
 
-        private async Task SearchForGatherNodes(CancellationToken cancellationToken)
+        private async void SearchForGatherNodes(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 // TODO: use screenshots and cv to find gathering nodes, and convert the coordinates to mumble units.
-                List<Node> foundNodes = null;
+                IEnumerable<NNode> newFoundNodes = null;
 
-                if (foundNodes != null)
+                if (newFoundNodes != null)
                 {
-                    // Add the foundNode and a path leading to it to the detour.
-                    lock (detourLock)
+                    // Add new found nodes to the list.
+                    lock (foundNodeLock)
                     {
-                        foreach (Node foundNode in foundNodes)
+                        foreach (NNode newFoundNode in newFoundNodes)
                         {
-                            if (!CurrentFoundNodes.Contains(foundNode))
+                            bool alreadyFound = false;
+
+                            foreach (NNode alreadyFoundNode in FoundNodes)
                             {
-                                if (CurrentDetourNode == null)
+                                if (MathUtils.GetDistSqr(newFoundNode.X, newFoundNode.Y, alreadyFoundNode.X, alreadyFoundNode.Y) < SameNodeDistanceToleranceSquared)
                                 {
-                                    FindPath(character.GetX(), character.GetY(), foundNode.X, foundNode.Y, out Node startNode, out Node endNode);
-
-                                    if (startNode == null)
-                                    {
-                                        CurrentDetourNode = foundNode;
-                                    }
-                                    else
-                                    {
-                                        CurrentDetourNode = startNode;
-                                        endNode.InsertAndGetNext(foundNode);
-                                    }
+                                    alreadyFound = true;
+                                    break;
                                 }
-                                else
-                                {
-                                    CurrentDetourNode.InsertAndGetNext(foundNode);
-
-                                    FindPath(foundNode.Previous.X, foundNode.Previous.Y, foundNode.X, foundNode.Y, out Node startNode, out Node endNode);
-
-                                    if (startNode != null)
-                                    {
-                                        foundNode.Previous.InsertAndGetNext(startNode);
-                                        endNode.InsertAndGetNext(foundNode);
-                                    }
-                                }
+                            }
+                            
+                            if (!alreadyFound)
+                            {
+                                FoundNodes.Enqueue(newFoundNode);
                             }
                         }
                     }
