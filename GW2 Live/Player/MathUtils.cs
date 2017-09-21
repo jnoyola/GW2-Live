@@ -8,6 +8,13 @@ namespace GW2_Live.Player
 {
     public static class MathUtils
     {
+        public static float GetDistSqr(float x1, float y1, float x2, float y2)
+        {
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            return dx * dx + dy * dy;
+        }
+
         public static double GetAngleDiff(float xFrom, float yFrom, float xTo, float yTo)
         {
             double aFrom = Math.Atan2(yFrom, xFrom);
@@ -24,13 +31,6 @@ namespace GW2_Live.Player
             }
 
             return da;
-        }
-
-        public static float GetDistSqr(float x1, float y1, float x2, float y2)
-        {
-            float dx = x2 - x1;
-            float dy = y2 - y1;
-            return dx * dx + dy * dy;
         }
     }
 }

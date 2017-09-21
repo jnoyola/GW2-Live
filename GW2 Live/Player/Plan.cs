@@ -55,6 +55,21 @@ namespace GW2_Live.Player
                 }
             }
 
+            public bool ContainsPoint(float x, float y)
+            {
+                var ps = Points.ToArray();
+                float inverseOfTwiceArea = 1 / (-ps[1].Y * ps[2].X + ps[0].Y * (-ps[1].X + ps[2].X) + ps[0].X * (ps[1].Y - ps[2].Y) + ps[1].X * ps[2].Y);
+                float s = inverseOfTwiceArea * (ps[0].Y * ps[2].X - ps[0].X * ps[2].Y + (ps[2].Y - ps[0].Y) * x + (ps[0].X - ps[2].X) * y);
+                float t = inverseOfTwiceArea * (ps[0].X * ps[1].Y - ps[0].Y * ps[1].X + (ps[0].Y - ps[1].Y) * x + (ps[1].X - ps[0].X) * y);
+
+                if (s >= 0 && t >= 0 && (1 - s - t) >= 0)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
             public HashSet<Tri> GetAdjacentTris()
             {
                 // Find all tris that share 2 points.
@@ -93,6 +108,27 @@ namespace GW2_Live.Player
                 }
 
                 return adjacentTris;
+            }
+
+            public Point[] GetSharedPoints(Tri other)
+            {
+                // Find the two shared points between the 2 tris as the interesection of their Points sets.
+                Point[] shared = new Point[2];
+                int j = 0;
+
+                foreach (Point pA in Points)
+                {
+                    foreach (Point pB in other.Points)
+                    {
+                        if (pA == pB)
+                        {
+                            shared[j] = pA;
+                            ++j;
+                        }
+                    }
+                }
+
+                return shared;
             }
         }
 
@@ -175,12 +211,7 @@ namespace GW2_Live.Player
         {
             foreach (Tri tri in Tris)
             {
-                var ps = tri.Points.ToArray();
-                float inverseOfTwiceArea = 1 / (-ps[1].Y * ps[2].X + ps[0].Y * (-ps[1].X + ps[2].X) + ps[0].X * (ps[1].Y - ps[2].Y) + ps[1].X * ps[2].Y);
-                float s = inverseOfTwiceArea * (ps[0].Y * ps[2].X - ps[0].X * ps[2].Y + (ps[2].Y - ps[0].Y) * x + (ps[0].X - ps[2].X) * y);
-                float t = inverseOfTwiceArea * (ps[0].X * ps[1].Y - ps[0].Y * ps[1].X + (ps[0].Y - ps[1].Y) * x + (ps[1].X - ps[0].X) * y);
-
-                if (s >= 0 && t >= 0 && (1 - s - t) >= 0)
+                if (tri.ContainsPoint(x, y))
                 {
                     return tri;
                 }

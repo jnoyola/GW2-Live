@@ -26,6 +26,7 @@ namespace GW2_Live.Player
         public List<NNode> Route { get; private set; }
         public Queue<NNode> FoundNodes { get; private set; }
         public Queue<NNode> ViaRoute { get; private set; }
+        public bool IsTurningInPlace { get; private set; }
         private object foundNodeLock;
 
         private IList<Plan.Point> targets;
@@ -51,65 +52,102 @@ namespace GW2_Live.Player
             // Fire and forget task to continuously search for gather nodes and update CurrentDetourNode.
             await Task.Run(() => SearchForGatherNodes(cancellationToken));
 
-            // Start by turning in place and heading towards the start.
-            await TurnToFace(CurrentDetourNode ?? CurrentRouteNode, cancellationToken);
-            input.Move(1);
-
-            // TODO: do something with the vendor node.
+            IsTurningInPlace = true;
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                bool isRoute = CurrentDetourNode == null;
-                Node currNode = isRoute ? CurrentRouteNode : CurrentDetourNode;
+                var x = character.GetX();
+                var y = character.GetY();
+
+                // Acquire target node.
+                var target = GenerateViaAndTarget(x, y);
 
                 // Turn towards the target.
-                double angleDiff = MathUtils.GetAngleDiff(character.GetX(), character.GetY(), currNode.X, currNode.Y);
-                if (angleDiff > AngleTolerance)
+                if (IsTurningInPlace)
                 {
-                    input.Turn(1);
+                    input.Move(0);
                 }
-                else if (angleDiff < -AngleTolerance)
+                TurnToward(x, y, target);
+
+                // Move towards the target.
+                if (!IsTurningInPlace)
                 {
-                    input.Turn(-1);
-                }
-                else
-                {
-                    input.Turn(0);
+                    MoveToward(x, y, target);
                 }
 
-                // Check if we've reached the target.
-                if (MathUtils.GetDistSqr(character.GetX(), character.GetY(), currNode.X, currNode.Y) < DistanceThresholdSquared)
-                {
-                    // Update the state of the path we're following.
-                    if (isRoute)
-                    {
-                        CurrentRouteNode = CurrentRouteNode.Next;
-                    }
-                    else
-                    {
-                        lock (detourLock)
-                        {
-                            CurrentFoundNodes.Remove(currNode);
-                            CurrentDetourNode = CurrentDetourNode.Next;
-                        }
-
-                        await GatherNode(currNode, cancellationToken);
-                    }
-
-                    // Turn in place if necessary.
-                    if (currNode.ShouldTurnInPlace)
-                    {
-                        input.Move(0);
-
-                        Node nextNode = CurrentDetourNode ?? CurrentRouteNode;
-                        await TurnToFace(nextNode, cancellationToken);
-
-                        input.Move(1);
-                    }
-                }
-
+                // Wait for movement.
                 await Task.Delay(UpdateInterval, cancellationToken);
+
+                // Check completion.
+                CheckCompletion(target);
             }
+
+
+
+
+
+
+
+
+            //// Start by turning in place and heading towards the start.
+            //await TurnToFace(CurrentDetourNode ?? CurrentRouteNode, cancellationToken);
+            //input.Move(1);
+
+            //// TODO: do something with the vendor node.
+
+            //while (!cancellationToken.IsCancellationRequested)
+            //{
+            //    bool isRoute = CurrentDetourNode == null;
+            //    Node currNode = isRoute ? CurrentRouteNode : CurrentDetourNode;
+
+            //    // Turn towards the target.
+            //    double angleDiff = MathUtils.GetAngleDiff(character.GetX(), character.GetY(), currNode.X, currNode.Y);
+            //    if (angleDiff > AngleTolerance)
+            //    {
+            //        input.Turn(1);
+            //    }
+            //    else if (angleDiff < -AngleTolerance)
+            //    {
+            //        input.Turn(-1);
+            //    }
+            //    else
+            //    {
+            //        input.Turn(0);
+            //    }
+
+            //    // Check if we've reached the target.
+            //    if (MathUtils.GetDistSqr(character.GetX(), character.GetY(), currNode.X, currNode.Y) < DistanceThresholdSquared)
+            //    {
+            //        // Update the state of the path we're following.
+            //        if (isRoute)
+            //        {
+            //            CurrentRouteNode = CurrentRouteNode.Next;
+            //        }
+            //        else
+            //        {
+            //            lock (detourLock)
+            //            {
+            //                CurrentFoundNodes.Remove(currNode);
+            //                CurrentDetourNode = CurrentDetourNode.Next;
+            //            }
+
+            //            await GatherNode(currNode, cancellationToken);
+            //        }
+
+            //        // Turn in place if necessary.
+            //        if (currNode.ShouldTurnInPlace)
+            //        {
+            //            input.Move(0);
+
+            //            Node nextNode = CurrentDetourNode ?? CurrentRouteNode;
+            //            await TurnToFace(nextNode, cancellationToken);
+
+            //            input.Move(1);
+            //        }
+            //    }
+
+            //    await Task.Delay(UpdateInterval, cancellationToken);
+            //}
 
 
 
@@ -173,6 +211,97 @@ namespace GW2_Live.Player
 
             NextRouteIndex = 0;
             Route = plan.Route.Select(p => new NNode(p.X, p.Y, p.Tris.First())).ToList();
+        }
+
+        public NNode GenerateViaAndTarget(float x, float y)
+        {
+            var target = ViaRoute.Peek() ?? FoundNodes.Peek() ?? Route[NextRouteIndex];
+            if (!target.Tri.ContainsPoint(x, y))
+            {
+                // Recalculate ViaRoute.
+                target = FoundNodes.Peek() ?? Route[NextRouteIndex];
+                GenerateViaRoute(x, y, target);
+
+                if (ViaRoute.Count != 0)
+                {
+                    target = ViaRoute.Peek();
+                }
+            }
+
+            return target;
+        }
+
+        public void TurnToward(float x, float y, NNode target)
+        {
+            double angleDiff = MathUtils.GetAngleDiff(x, y, target.X, target.Y);
+            if (angleDiff > AngleTolerance)
+            {
+                input.Turn(1);
+            }
+            else if (angleDiff < -AngleTolerance)
+            {
+                input.Turn(-1);
+            }
+            else
+            {
+                input.Turn(0);
+                IsTurningInPlace = false;
+            }
+        }
+
+        public void MoveToward(float x, float y, NNode target)
+        {
+            input.Move(1);
+        }
+
+        public void CheckCompletion(NNode target)
+        {
+            var x = character.GetX();
+            var y = character.GetY();
+ 
+            if (MathUtils.GetDistSqr(x, y, target.X, target.Y) < DistanceThresholdSquared)
+            {
+                IsTurningInPlace = target.ShouldTurnInPlace;
+
+                if (target == ViaRoute.Peek())
+                {
+                    ViaRoute.Dequeue();
+                }
+                else if (target == FoundNodes.Peek())
+                {
+                    lock (foundNodeLock)
+                    {
+                        FoundNodes.Dequeue();
+                    }
+                }
+                else if (target == Route[NextRouteIndex])
+                {
+                    ++NextRouteIndex;
+                    if (NextRouteIndex == Route.Count)
+                    {
+                        NextRouteIndex = 0;
+                    }
+                }
+                else
+                {
+                    throw new Exception("Completed node was not found in any list.");
+                }
+            }
+        }
+
+        private void GenerateViaRoute(float x, float y, NNode target)
+        {
+            ViaRoute.Clear();
+
+            var fromTri = plan.GetTriContainingPoint(x, y);
+            var triPath = plan.SearchForPathBetweenTris(fromTri, target.Tri);
+
+            for (int i = 0; i < triPath.Count - 1; ++i)
+            {
+                var sharedPoints = triPath[i].GetSharedPoints(triPath[i + 1]);
+                GetPointBetween(sharedPoints[0], sharedPoints[1], out float xVia, out float yVia);
+                ViaRoute.Enqueue(new NNode(xVia, yVia, triPath[i]));
+            }
         }
 
         private async Task TurnToFace(Node target, CancellationToken cancellationToken)
@@ -311,6 +440,12 @@ namespace GW2_Live.Player
                 endNode.InsertAndGetNext(newNode);
                 endNode = newNode;
             }
+        }
+
+        private void GetPointBetween(Plan.Point a, Plan.Point b, out float x, out float y)
+        {
+            x = (a.X + b.X) / 2;
+            y = (a.Y + b.Y) / 2;
         }
     }
 }
