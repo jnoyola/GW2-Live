@@ -38,6 +38,9 @@ namespace GW2_Live.Player
             this.character = character;
             this.input = input;
             this.planProvider = planProvider;
+
+            FoundNodes = new Queue<Node>();
+            ViaRoute = new Queue<Node>();
         }
 
         public async Task PlayAsync(CancellationToken cancellationToken)
@@ -85,16 +88,16 @@ namespace GW2_Live.Player
 
         public Node GenerateViaAndTarget(float x, float y)
         {
-            var target = ViaRoute.Peek() ?? FoundNodes.Peek() ?? Route[NextRouteIndex];
+            var target = ViaRoute.PeekOrDefault() ?? FoundNodes.PeekOrDefault() ?? Route[NextRouteIndex];
             if (!target.Tri.ContainsPoint(x, y))
             {
                 // Recalculate ViaRoute.
-                target = FoundNodes.Peek() ?? Route[NextRouteIndex];
+                target = FoundNodes.PeekOrDefault() ?? Route[NextRouteIndex];
                 GenerateViaRoute(x, y, target);
 
                 if (ViaRoute.Count != 0)
                 {
-                    target = ViaRoute.Peek();
+                    target = ViaRoute.PeekOrDefault();
                 }
             }
 
@@ -140,11 +143,11 @@ namespace GW2_Live.Player
                 }
 
                 // Check which target list to advance.
-                if (target == ViaRoute.Peek())
+                if (target == ViaRoute.PeekOrDefault())
                 {
                     ViaRoute.Dequeue();
                 }
-                else if (target == FoundNodes.Peek())
+                else if (target == FoundNodes.PeekOrDefault())
                 {
                     // Gather this node.
                     await Gather(cancellationToken);

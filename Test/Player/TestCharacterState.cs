@@ -6,66 +6,48 @@ namespace Test.Player
     class TestCharacterState : ICharacterStateProvider
     {
         public float Angle { get; set; }
-        public float Identity { get; set; }
 
-        public float GetAngle()
-        {
-            throw new System.NotImplementedException();
-        }
+        public CharacterIdentity Identity { get; set; } = new CharacterIdentity();
 
-        public CharacterIdentity GetIdentity()
-        {
-            throw new System.NotImplementedException();
-        }
+        public int UiTick { get; set; }
 
-        public float GetPercentX()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float X { get; set; }
 
-        public float GetPercentY()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float Y { get; set; }
 
-        public int GetUiTick()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float Z { get; set; }
 
-        public float GetVx()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float Vx { get; set; }
 
-        public float GetVy()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float Vy { get; set; }
 
-        public float GetVz()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float Vz { get; set; }
 
-        public float GetX()
-        {
-            throw new System.NotImplementedException();
-        }
+        private float mapX, mapY, mapWidth, mapHeight;
 
-        public float GetY()
-        {
-            throw new System.NotImplementedException();
-        }
+        public float GetAngle() => Angle;
 
-        public float GetZ()
-        {
-            throw new System.NotImplementedException();
-        }
+        public CharacterIdentity GetIdentity() => Identity;
+
+        public int GetUiTick() => UiTick;
+
+        public float GetX() => X;
+        public float GetY() => Y;
+        public float GetZ() => Z;
+
+        public float GetPercentX() => (GetX() - mapX) / mapWidth;
+        public float GetPercentY() => 1 - (GetY() - mapY) / mapHeight;
+
+        public float GetVx() => Vx;
+        public float GetVy() => Vy;
+        public float GetVz() => Vz;
 
         public void SetMapRect(float mapX, float mapY, float mapWidth, float mapHeight)
         {
-            throw new System.NotImplementedException();
+            this.mapX = mapX;
+            this.mapY = mapY;
+            this.mapWidth = mapWidth;
+            this.mapHeight = mapHeight;
         }
 
         public async Task WaitForActive()
